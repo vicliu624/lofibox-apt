@@ -1,0 +1,115 @@
+name: Publish LoFiBox APT Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "LoFiBox-Zero ref to package"
+        required: true
+        default: "main"
+      suite:
+        description: "Debian suite"
+        required: true
+        default: "trixie"
+      preview_suffix:
+        description: "Debian version suffix. Use auto to derive ~lofibox<run_number>."
+        required: true
+        default: "auto"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout APT repo
+        uses: actions/checkout@v4
+        with:
+          path: lofibox-apt
+
+      - name: Checkout LoFiBox-Zero
+        uses: actions/checkout@v4
+        with:
+          repository: vicliu624/LoFiBox-Zero
+          ref: ${{ inputs.source_ref }}
+          path: LoFiBox-Zero
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            aptly \
+            appstream \
+            build-essential \
+            cmake \
+            debhelper-compat \
+            desktop-file-utils \
+            devscripts \
+            dpkg-dev \
+            gnupg \
+            libfreetype-dev \
+            libx11-dev \
+            libxkbcommon-dev \
+            lintian \
+            ninja-build \
+            pkgconf \
+            python3
+
+      - name: Import APT signing key
+        env:
+          LOFIBOX_APT_GPG_PRIVATE_KEY: ${{ secrets.LOFIBOX_APT_GPG_PRIVATE_KEY }}
+        run: |
+          test -n "$LOFIBOX_APT_GPG_PRIVATE_KEY"
+          printf '%s\n' "$LOFIBOX_APT_GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Apply preview version suffix
+        working-directory: LoFiBox-Zero
+        env:
+          DEBEMAIL: maintainers@example.invalid
+          DEBFULLNAME: LoFiBox contributors
+        run: |
+          current_version="$(dpkg-parsechangelog -S Version)"
+          if [ "${{ inputs.preview_suffix }}" = "auto" ]; then
+            suffix="~lofibox${GITHUB_RUN_NUMBER}"
+          else
+            suffix="${{ inputs.preview_suffix }}"
+          fi
+          dch --newversion "${current_version}${suffix}" --distribution "${{ inputs.suite }}" "Preview APT repository build."
+          dpkg-parsechangelog -S Version
+
+      - name: Build Debian package
+        working-directory: LoFiBox-Zero
+        run: |
+          chmod +x debian/rules debian/tests/smoke
+          dpkg-buildpackage -us -uc -b
+
+      - name: Build signed APT repository
+        env:
+          LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
+        run: |
+          test -n "$LOFIBOX_APT_GPG_KEY_ID"
+          LoFiBox-Zero/scripts/build-github-pages-apt-repository.sh \
+            --suite "${{ inputs.suite }}" \
+            --component main \
+            --output public \
+            --repo-name lofibox-preview \
+            --origin LoFiBox \
+            --label "LoFiBox Preview" \
+            --gpg-key "$LOFIBOX_APT_GPG_KEY_ID" \
+            --changes "$(find . -maxdepth 1 -name 'lofibox_*_amd64.changes' | head -n 1)"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy Pages
+        uses: actions/deploy-pages@v4

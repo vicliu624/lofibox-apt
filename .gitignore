@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+public/
+*.deb
+*.changes
+*.buildinfo
+*.dsc
+*.tar.*
+*.key
+*.gpg
+!.gitignore
