@@ -90,6 +90,7 @@ Start-Process .\site\index.html
 - `LOFIBOX_APT_GPG_KEY_ID`
 
 `LOFIBOX_APT_GPG_PRIVATE_KEY` 可以是 ASCII-armored 私钥，也可以是 base64 后的私钥内容。`LOFIBOX_APT_GPG_KEY_ID` 推荐填写 fingerprint。
+如果 key id 和导入出的私钥 fingerprint 不匹配，workflow 会自动使用导入出的 fingerprint；但 private key secret 不能只填 public key。
 
 自动发布：
 

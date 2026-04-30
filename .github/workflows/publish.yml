@@ -99,8 +99,25 @@ jobs:
             base64 -d "$key_input" > "$key_material"
           fi
 
-          gpg --batch --import "$key_material"
-          gpg --batch --list-secret-keys "$LOFIBOX_APT_GPG_KEY_ID" >/dev/null
+          if ! gpg --batch --import "$key_material"; then
+            echo "::error::LOFIBOX_APT_GPG_PRIVATE_KEY is not an importable OpenPGP private key. Use an ASCII-armored private key or base64-encoded private key material."
+            exit 1
+          fi
+
+          imported_fingerprint="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
+          if [ -z "$imported_fingerprint" ]; then
+            echo "::error::LOFIBOX_APT_GPG_PRIVATE_KEY did not import a secret key. Make sure the secret contains a private key, not only the public key."
+            exit 1
+          fi
+
+          if gpg --batch --list-secret-keys "$LOFIBOX_APT_GPG_KEY_ID" >/dev/null 2>&1; then
+            signing_key="$LOFIBOX_APT_GPG_KEY_ID"
+          else
+            echo "::warning::LOFIBOX_APT_GPG_KEY_ID did not match the imported secret key. Falling back to the imported fingerprint."
+            signing_key="$imported_fingerprint"
+          fi
+
+          echo "LOFIBOX_IMPORTED_GPG_KEY_ID=$signing_key" >> "$GITHUB_ENV"
           rm -f "$key_input" "$key_material"
 
       - name: Apply preview version suffix
@@ -146,7 +163,8 @@ jobs:
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
         run: |
           suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-          test -n "$LOFIBOX_APT_GPG_KEY_ID"
+          signing_key="${LOFIBOX_IMPORTED_GPG_KEY_ID:-$LOFIBOX_APT_GPG_KEY_ID}"
+          test -n "$signing_key"
           chmod +x lofibox-apt/scripts/*.sh
           lofibox-apt/scripts/build-public-artifact.sh \
             --site lofibox-apt/site \
@@ -157,7 +175,7 @@ jobs:
             --repo-name lofibox-preview \
             --origin LoFiBox \
             --label "LoFiBox Preview" \
-            --gpg-key "$LOFIBOX_APT_GPG_KEY_ID" \
+            --gpg-key "$signing_key" \
             --changes "$LOFIBOX_CHANGES"
 
       - name: Configure Pages

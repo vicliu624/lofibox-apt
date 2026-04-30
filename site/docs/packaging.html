@@ -106,8 +106,8 @@ EOF</code></pre>
               <tr><th>Secret</th><th>Use</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>Imports the private key used for APT repository signing. ASCII-armored and base64-encoded key material are both supported.</td></tr>
-              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>Selects the signing key for aptly / gpg. A full fingerprint is recommended.</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>Imports the private key used for APT repository signing. ASCII-armored and base64-encoded private key material are both supported.</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>Selects the signing key for aptly / gpg. A full fingerprint is recommended; if it does not match, the workflow falls back to the imported private-key fingerprint.</td></tr>
             </tbody>
           </table>
         </div>

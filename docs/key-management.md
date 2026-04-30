@@ -16,6 +16,7 @@ LOFIBOX_APT_GPG_KEY_ID
 
 `LOFIBOX_APT_GPG_PRIVATE_KEY` 只进入 GitHub Actions secret，不进入 git、不放进 `site/`、不放进 `public/`。
 `LOFIBOX_APT_GPG_KEY_ID` 可以是短 key id、长 key id 或 fingerprint；推荐使用 fingerprint，避免同名/同短 id 混淆。
+如果 `LOFIBOX_APT_GPG_KEY_ID` 和导入的私钥不匹配，workflow 会退回到导入私钥的 fingerprint；但 `LOFIBOX_APT_GPG_PRIVATE_KEY` 必须是真正的 private key，只有 public key 不能用于签名。
 
 ## 用户侧安装 keyring
 

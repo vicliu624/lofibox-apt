@@ -104,8 +104,8 @@ EOF</code></pre>
               <tr><th>Secret</th><th>用途</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>导入用于 APT repository signing 的私钥，支持 ASCII-armored 或 base64 后的私钥内容。</td></tr>
-              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>传给 aptly / gpg 选择签名 key，推荐填写完整 fingerprint。</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>导入用于 APT repository signing 的私钥，支持 ASCII-armored 或 base64 后的 private key 内容。</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>传给 aptly / gpg 选择签名 key，推荐填写完整 fingerprint；如果不匹配，workflow 会退回到导入私钥的 fingerprint。</td></tr>
             </tbody>
           </table>
         </div>
