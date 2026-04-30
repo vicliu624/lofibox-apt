@@ -75,9 +75,33 @@ jobs:
       - name: Import APT signing key
         env:
           LOFIBOX_APT_GPG_PRIVATE_KEY: ${{ secrets.LOFIBOX_APT_GPG_PRIVATE_KEY }}
+          LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
         run: |
           test -n "$LOFIBOX_APT_GPG_PRIVATE_KEY"
-          printf '%s\n' "$LOFIBOX_APT_GPG_PRIVATE_KEY" | gpg --batch --import
+          test -n "$LOFIBOX_APT_GPG_KEY_ID"
+          install -d -m 0700 "$HOME/.gnupg"
+
+          key_input="$RUNNER_TEMP/lofibox-apt-private-key.input"
+          key_material="$RUNNER_TEMP/lofibox-apt-private-key.asc"
+          printf '%s' "$LOFIBOX_APT_GPG_PRIVATE_KEY" > "$key_input"
+
+          if grep -q '\\n' "$key_input"; then
+            python3 - "$key_input" "$key_material" <<'PY'
+from pathlib import Path
+import sys
+source = Path(sys.argv[1])
+target = Path(sys.argv[2])
+target.write_text(source.read_text(encoding="utf-8").replace("\\n", "\n"), encoding="utf-8")
+PY
+          elif grep -q -- '-----BEGIN PGP PRIVATE KEY BLOCK-----' "$key_input"; then
+            cp "$key_input" "$key_material"
+          else
+            base64 -d "$key_input" > "$key_material"
+          fi
+
+          gpg --batch --import "$key_material"
+          gpg --batch --list-secret-keys "$LOFIBOX_APT_GPG_KEY_ID" >/dev/null
+          rm -f "$key_input" "$key_material"
 
       - name: Apply preview version suffix
         working-directory: LoFiBox-Zero

@@ -11,7 +11,7 @@ LOFIBOX_APT_GPG_PRIVATE_KEY
 LOFIBOX_APT_GPG_KEY_ID
 ```
 
-- `LOFIBOX_APT_GPG_PRIVATE_KEY`：ASCII-armored GPG 私钥，用于 CI 导入。
+- `LOFIBOX_APT_GPG_PRIVATE_KEY`：ASCII-armored GPG 私钥，用于 CI 导入。也可以填写 base64 后的私钥内容；如果 secret 中换行被保存成字面量 `\n`，workflow 会还原。
 - `LOFIBOX_APT_GPG_KEY_ID`：用于签名 `Release` / `InRelease` 的 key id 或 fingerprint。
 
 `LOFIBOX_APT_GPG_PRIVATE_KEY` 只进入 GitHub Actions secret，不进入 git、不放进 `site/`、不放进 `public/`。
