@@ -77,8 +77,14 @@ jobs:
           LOFIBOX_APT_GPG_PRIVATE_KEY: ${{ secrets.LOFIBOX_APT_GPG_PRIVATE_KEY }}
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
         run: |
-          test -n "$LOFIBOX_APT_GPG_PRIVATE_KEY"
-          test -n "$LOFIBOX_APT_GPG_KEY_ID"
+          if [ -z "$LOFIBOX_APT_GPG_PRIVATE_KEY" ]; then
+            echo "::error::Missing GitHub secret LOFIBOX_APT_GPG_PRIVATE_KEY."
+            exit 1
+          fi
+          if [ -z "$LOFIBOX_APT_GPG_KEY_ID" ]; then
+            echo "::error::Missing GitHub secret LOFIBOX_APT_GPG_KEY_ID."
+            exit 1
+          fi
           install -d -m 0700 "$HOME/.gnupg"
 
           key_input="$RUNNER_TEMP/lofibox-apt-private-key.input"
@@ -93,10 +99,13 @@ jobs:
           target = Path(sys.argv[2])
           target.write_text(source.read_text(encoding="utf-8").replace("\\n", "\n"), encoding="utf-8")
           PY
-          elif grep -q -- '-----BEGIN PGP PRIVATE KEY BLOCK-----' "$key_input"; then
+          elif grep -q -- '-----BEGIN PGP ' "$key_input"; then
             cp "$key_input" "$key_material"
           else
-            base64 -d "$key_input" > "$key_material"
+            if ! base64 -d "$key_input" > "$key_material"; then
+              echo "::error::LOFIBOX_APT_GPG_PRIVATE_KEY is neither ASCII-armored OpenPGP material nor base64-encoded OpenPGP material."
+              exit 1
+            fi
           fi
 
           if ! gpg --batch --import "$key_material"; then
