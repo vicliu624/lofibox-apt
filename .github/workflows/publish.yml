@@ -1,6 +1,10 @@
 name: Publish LoFiBox APT Repository
 
 on:
+  push:
+    branches:
+      - master
+      - main
   workflow_dispatch:
     inputs:
       source_ref:
@@ -42,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vicliu624/LoFiBox-Zero
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
           path: LoFiBox-Zero
 
       - name: Install packaging tools
@@ -82,12 +86,14 @@ jobs:
           DEBFULLNAME: LoFiBox contributors
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
-          if [ "${{ inputs.preview_suffix }}" = "auto" ]; then
+          preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
+          suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+          if [ "$preview_suffix" = "auto" ]; then
             suffix="~lofibox${GITHUB_RUN_NUMBER}"
           else
-            suffix="${{ inputs.preview_suffix }}"
+            suffix="$preview_suffix"
           fi
-          dch --newversion "${current_version}${suffix}" --distribution "${{ inputs.suite }}" "Preview APT repository build."
+          dch --newversion "${current_version}${suffix}" --distribution "$suite" "Preview APT repository build."
           dpkg-parsechangelog -S Version
 
       - name: Build Debian package
@@ -115,12 +121,13 @@ jobs:
         env:
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
         run: |
+          suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
           test -n "$LOFIBOX_APT_GPG_KEY_ID"
           chmod +x lofibox-apt/scripts/*.sh
           lofibox-apt/scripts/build-public-artifact.sh \
             --site lofibox-apt/site \
             --lofibox-zero LoFiBox-Zero \
-            --suite "${{ inputs.suite }}" \
+            --suite "$suite" \
             --component main \
             --output public \
             --repo-name lofibox-preview \

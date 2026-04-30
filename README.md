@@ -73,7 +73,7 @@ Start-Process .\site\index.html
 2. `Settings -> Secrets and variables -> Actions` 增加 APT signing secrets。
 3. 确认仓库启用了 Actions。
 
-`.github/workflows/publish.yml` 是唯一正式发布入口。它会：
+`.github/workflows/publish.yml` 是唯一正式发布入口。它会在 `master/main` 推送时自动发布，也可以手动触发指定 LoFiBox-Zero ref。它会：
 
 1. checkout `lofibox-apt`；
 2. checkout `vicliu624/LoFiBox-Zero`；
@@ -88,6 +88,20 @@ Start-Process .\site\index.html
 
 - `LOFIBOX_APT_GPG_PRIVATE_KEY`
 - `LOFIBOX_APT_GPG_KEY_ID`
+
+自动发布：
+
+```text
+git push origin master
+```
+
+自动发布使用：
+
+```text
+source_ref: main
+suite: trixie
+preview_suffix: auto
+```
 
 手动发布：
 

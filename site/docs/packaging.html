@@ -85,7 +85,7 @@ EOF</code></pre>
           validates the website and APT boundaries, then deploys the artifact with GitHub Pages.
         </p>
         <ol>
-          <li>Manually trigger the <code>Publish LoFiBox APT Repository</code> workflow.</li>
+          <li>Push to <code>master/main</code> for the default publishing flow, or manually trigger the <code>Publish LoFiBox APT Repository</code> workflow.</li>
           <li>Select <code>source_ref</code>, usually the LoFiBox-Zero main branch or a release tag.</li>
           <li>Select the suite; the current default is <code>trixie</code>.</li>
           <li>When preview_suffix is <code>auto</code>, the workflow generates a <code>~lofibox&lt;run_number&gt;</code> suffix.</li>
@@ -95,7 +95,8 @@ EOF</code></pre>
         <h2>Repository Setup</h2>
         <p>
           In GitHub repository settings, set Pages to <strong>GitHub Actions</strong> and add the two Actions secrets below.
-          The publishing workflow is manual so preview packages are intentionally cut from a chosen LoFiBox-Zero ref.
+          Pushes to <code>master/main</code> publish from LoFiBox-Zero <code>main</code> with the default suite.
+          Manual runs can still choose a specific LoFiBox-Zero ref.
         </p>
 
         <h2>Secrets</h2>
