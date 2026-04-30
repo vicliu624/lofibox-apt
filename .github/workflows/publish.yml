@@ -133,11 +133,14 @@ jobs:
       - name: Build in Raspberry Pi ARMv6 environment
         uses: pguyot/arm-runner-action@v2
         with:
-          base_image: dietpi:rpi_armv6_trixie
+          base_image: raspios_lite:latest
           cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
           image_additional_mb: 4096
+          shell: /bin/bash -eo pipefail
           copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox_*_armhf.buildinfo"
           copy_artifact_dest: armhf-artifacts
+          copy_artifacts_on_fail: yes
           commands: |
             set -eux
             apt-get update
