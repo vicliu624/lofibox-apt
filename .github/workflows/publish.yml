@@ -87,12 +87,12 @@ jobs:
 
           if grep -q '\\n' "$key_input"; then
             python3 - "$key_input" "$key_material" <<'PY'
-from pathlib import Path
-import sys
-source = Path(sys.argv[1])
-target = Path(sys.argv[2])
-target.write_text(source.read_text(encoding="utf-8").replace("\\n", "\n"), encoding="utf-8")
-PY
+          from pathlib import Path
+          import sys
+          source = Path(sys.argv[1])
+          target = Path(sys.argv[2])
+          target.write_text(source.read_text(encoding="utf-8").replace("\\n", "\n"), encoding="utf-8")
+          PY
           elif grep -q -- '-----BEGIN PGP PRIVATE KEY BLOCK-----' "$key_input"; then
             cp "$key_input" "$key_material"
           else
