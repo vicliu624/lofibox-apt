@@ -137,13 +137,14 @@ jobs:
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
           preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-          suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+          apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+          package_distribution="unstable"
           if [ "$preview_suffix" = "auto" ]; then
             suffix="~lofibox${GITHUB_RUN_NUMBER}"
           else
             suffix="$preview_suffix"
           fi
-          dch -b --newversion "${current_version}${suffix}" --distribution "$suite" "Preview APT repository build."
+          dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
           dpkg-parsechangelog -S Version
 
       - name: Build Debian package

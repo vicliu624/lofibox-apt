@@ -88,6 +88,7 @@ EOF</code></pre>
           <li>选择 suite，当前默认 <code>trixie</code>。</li>
           <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;</code> 后缀。</li>
           <li>预览后缀会刻意排在未来 Debian 官方版本之前，所以 workflow 使用 <code>dch -b</code> 应用这个版本。</li>
+          <li>APT 仓库 suite 仍然发布为 <code>trixie</code>，但包内 changelog distribution 固定为 <code>unstable</code>，避免 Lintian 把第三方源 suite 误判成无效上传目标。</li>
           <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
         </ol>
 
