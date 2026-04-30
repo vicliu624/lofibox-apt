@@ -97,7 +97,7 @@ jobs:
           echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
 
       - name: Run Lintian
-        run: lintian "$LOFIBOX_CHANGES"
+        run: lintian --profile debian "$LOFIBOX_CHANGES"
 
       - name: Run Autopkgtest Smoke
         run: |
@@ -180,7 +180,7 @@ jobs:
           echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
 
       - name: Run Lintian
-        run: lintian "$LOFIBOX_CHANGES"
+        run: lintian --profile debian "$LOFIBOX_CHANGES"
 
       - name: Validate arm64 package
         run: |
@@ -266,7 +266,7 @@ jobs:
           echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
 
       - name: Run Lintian
-        run: lintian "$LOFIBOX_CHANGES"
+        run: lintian --profile debian "$LOFIBOX_CHANGES"
 
       - name: Validate Raspberry Pi ARMv6 binary tags
         run: |

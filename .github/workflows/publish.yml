@@ -96,7 +96,7 @@ jobs:
           echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
 
       - name: Run Lintian
-        run: lintian "$LOFIBOX_CHANGES"
+        run: lintian --profile debian "$LOFIBOX_CHANGES"
 
       - name: Run Autopkgtest Smoke
         run: |
@@ -174,7 +174,7 @@ jobs:
 
             chmod +x debian/rules debian/tests/smoke
             dpkg-buildpackage -us -uc -b
-            lintian ../lofibox_*_armhf.changes
+            lintian --profile debian ../lofibox_*_armhf.changes
             test "$(dpkg-deb -f ../lofibox_*_armhf.deb Architecture)" = "armhf"
 
       - name: Upload Raspberry Pi armhf artifact
