@@ -110,7 +110,7 @@ suite: trixie
 preview_suffix: auto
 ```
 
-架构发布约束：预览源必须同时发布 `amd64`、`arm64` 和 `armhf`。`arm64` 面向 CM4/CM5 的 64-bit Raspberry Pi OS/Debian；`armhf` 面向 CM0/ARMv6，因此必须在 Raspberry Pi OS ARMv6/arm1176 环境构建，不能用普通 ARMv7 baseline 的 armhf 包冒充。
+架构发布约束：预览源必须同时发布 `amd64`、`arm64` 和 `armhf`。`arm64` 面向 CM4/CM5 的 64-bit Raspberry Pi OS/Debian；`armhf` 面向 CM0/ARMv6，发布流水线会用 armhf hard-float 交叉工具链并强制 `-march=armv6 -mfpu=vfp -mfloat-abi=hard`，再用 `readelf` 校验 CPU attribute，不能用普通 ARMv7 baseline 的 armhf 包冒充。
 
 预览包版本默认使用 `0.1.0-1~lofiboxN` 这类后缀。`~` 让预览源版本低于未来 Debian 官方源的 `0.1.0-1`，所以 workflow 使用 `dch -b` 明确允许这次有意的预览降版本。注意这里有两层命名：APT 仓库 suite 仍然是 `trixie`，但 Debian 包构建产物 `.changes` 的 changelog distribution 固定为 `unstable`，避免 Lintian 把第三方源 suite 误判成无效上传目标。
 
