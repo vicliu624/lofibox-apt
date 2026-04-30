@@ -101,7 +101,7 @@ GitHub 仓库设置中需要：
 - Actions secrets 增加 `LOFIBOX_APT_GPG_PRIVATE_KEY`。
 - Actions secrets 增加 `LOFIBOX_APT_GPG_KEY_ID`。
 
-推送到 `master/main` 会自动触发 `Publish LoFiBox APT Repository` workflow，使用：
+推送到 `main` 会自动触发 `Publish LoFiBox APT Repository` workflow，使用：
 
 ```text
 source_ref: main

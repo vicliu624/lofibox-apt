@@ -83,7 +83,7 @@ EOF</code></pre>
           校验官网与 APT 源边界，然后部署 GitHub Pages。
         </p>
         <ol>
-          <li>推送到 <code>master/main</code> 走默认发布流程，也可以手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>
+          <li>推送到 <code>main</code> 走默认发布流程，也可以手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>
           <li>选择 <code>source_ref</code>，通常是 LoFiBox-Zero 的 main 或 release tag。</li>
           <li>选择 suite，当前默认 <code>trixie</code>。</li>
           <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;</code> 后缀。</li>
@@ -93,7 +93,7 @@ EOF</code></pre>
         <h2>仓库设置</h2>
         <p>
           在 GitHub 仓库设置中，把 Pages source 设为 <strong>GitHub Actions</strong>，并添加下面的 Actions secrets。
-          推送到 <code>master/main</code> 会使用 LoFiBox-Zero <code>main</code> 和默认 suite 自动发布。
+          推送到 <code>main</code> 会使用 LoFiBox-Zero <code>main</code> 和默认 suite 自动发布。
           手动运行仍然可以选择指定 LoFiBox-Zero ref。
         </p>
 
