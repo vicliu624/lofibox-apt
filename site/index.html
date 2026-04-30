@@ -8,6 +8,8 @@
       name="description"
       content="The official LoFiBox Zero portal: a Linux-first music player for small screens, desktops, terminals, remote media libraries, and automation workflows."
     >
+    <meta name="repository" content="https://github.com/vicliu624/LoFiBox-Zero">
+    <link rel="me" href="https://github.com/vicliu624/LoFiBox-Zero">
     <link rel="alternate" hreflang="en" href="index.html">
     <link rel="alternate" hreflang="zh-Hans" href="zh/index.html">
     <link rel="stylesheet" href="assets/site.css">
@@ -48,6 +50,7 @@
             <a class="button primary" href="#install">Install Preview</a>
             <a class="button" href="docs/index.html">Read Docs</a>
             <a class="button" href="docs/packaging.html">APT Repository</a>
+            <a class="button" href="https://github.com/vicliu624/LoFiBox-Zero">Source Code</a>
           </div>
         </div>
 
@@ -99,6 +102,37 @@ sudo apt install lofibox</code></pre>
               The repository publishes amd64, arm64, and Raspberry Pi ARMv6-compatible armhf packages.
               Versions may include a <code>~lofibox&lt;run&gt;</code> suffix; after the stable Debian flow is ready, this repository remains a preview channel.
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Open Source</p>
+              <h2>Source repository and development entry points</h2>
+            </div>
+            <p>
+              The website and APT repository live here, but the application source of truth is
+              <a href="https://github.com/vicliu624/LoFiBox-Zero">vicliu624/LoFiBox-Zero</a>.
+              Use the source repository for code, issues, releases, CI status, and contribution history.
+            </p>
+          </div>
+
+          <div class="grid">
+            <article class="card">
+              <h3><a href="https://github.com/vicliu624/LoFiBox-Zero">Application source</a></h3>
+              <p>C++ runtime, GUI, TUI, CLI, packaging metadata, tests, and product specifications.</p>
+            </article>
+            <article class="card">
+              <h3><a href="https://github.com/vicliu624/LoFiBox-Zero/issues">Issues</a></h3>
+              <p>Report playback, metadata, lyrics, remote source, TUI, CLI, and packaging problems.</p>
+            </article>
+            <article class="card">
+              <h3><a href="https://github.com/vicliu624/LoFiBox-Zero/actions">CI status</a></h3>
+              <p>Track build, test, Debian packaging, lintian, and autopkgtest results for the application repository.</p>
+            </article>
           </div>
         </div>
       </section>

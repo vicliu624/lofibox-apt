@@ -81,6 +81,8 @@ EOF</code></pre>
           GitHub Actions workflow 会 checkout <code>lofibox-apt</code> 和 <code>LoFiBox-Zero</code>，构建 Debian 包，
           使用 GPG key 生成 signed APT repo，然后把 <code>site/</code> 静态官网复制到同一个 Pages artifact 根目录，
           校验官网与 APT 源边界，然后部署 GitHub Pages。
+          被打包的应用源码来自 <a href="https://github.com/vicliu624/LoFiBox-Zero">vicliu624/LoFiBox-Zero</a>；
+          本仓库只负责官网门户和 APT 源发布。
         </p>
         <ol>
           <li>推送到 <code>main</code> 走默认发布流程，也可以手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>

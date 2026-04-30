@@ -83,6 +83,8 @@ EOF</code></pre>
           The GitHub Actions workflow checks out <code>lofibox-apt</code> and <code>LoFiBox-Zero</code>, builds the Debian package,
           generates a signed APT repository with a GPG key, copies <code>site/</code> into the same Pages artifact root,
           validates the website and APT boundaries, then deploys the artifact with GitHub Pages.
+          The packaged application source is <a href="https://github.com/vicliu624/LoFiBox-Zero">vicliu624/LoFiBox-Zero</a>;
+          this repository only publishes the portal and APT repository.
         </p>
         <ol>
           <li>Push to <code>main</code> for the default publishing flow, or manually trigger the <code>Publish LoFiBox APT Repository</code> workflow.</li>
