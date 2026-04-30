@@ -48,7 +48,8 @@
         <h1>Install and Run LoFiBox</h1>
         <p>
           LoFiBox Zero is a Linux-first project. The current third-party APT repository is used for installation and testing
-          before LoFiBox enters Debian's official repositories, with Debian trixie / amd64 as the most common target.
+          before LoFiBox enters Debian's official repositories. It publishes Debian trixie packages for amd64 desktops,
+          arm64 Raspberry Pi CM4/CM5 systems, and ARMv6-compatible armhf Raspberry Pi CM0 systems.
         </p>
 
         <h2>1. Add the Preview APT Repository</h2>
@@ -61,7 +62,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64
+Architectures: amd64 arm64 armhf
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF
 

@@ -29,7 +29,166 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-publish:
+  build-native-package:
+    name: Build Debian package (${{ matrix.deb_arch }})
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - deb_arch: amd64
+            runs_on: ubuntu-24.04
+          - deb_arch: arm64
+            runs_on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout LoFiBox-Zero
+        uses: actions/checkout@v4
+        with:
+          repository: vicliu624/LoFiBox-Zero
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            apt-utils \
+            autopkgtest \
+            build-essential \
+            cmake \
+            debhelper-compat \
+            desktop-file-utils \
+            devscripts \
+            dpkg-dev \
+            libdistro-info-perl \
+            libfreetype-dev \
+            libx11-dev \
+            libxkbcommon-dev \
+            lintian \
+            ninja-build \
+            pkgconf \
+            python3
+
+      - name: Apply preview version suffix
+        env:
+          DEBEMAIL: maintainers@example.invalid
+          DEBFULLNAME: LoFiBox contributors
+        run: |
+          current_version="$(dpkg-parsechangelog -S Version)"
+          preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
+          apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+          package_distribution="unstable"
+          if [ "$preview_suffix" = "auto" ]; then
+            suffix="~lofibox${GITHUB_RUN_NUMBER}"
+          else
+            suffix="$preview_suffix"
+          fi
+          dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
+          dpkg-parsechangelog -S Version
+
+      - name: Build Debian package
+        run: |
+          chmod +x debian/rules debian/tests/smoke
+          dpkg-buildpackage -us -uc -b
+
+      - name: Locate Debian build metadata
+        run: |
+          changes_file="$(find "$GITHUB_WORKSPACE/.." -maxdepth 1 -name 'lofibox_*_${{ matrix.deb_arch }}.changes' -print -quit)"
+          test -n "$changes_file"
+          test -s "$changes_file"
+          echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
+
+      - name: Run Lintian
+        run: lintian "$LOFIBOX_CHANGES"
+
+      - name: Run Autopkgtest Smoke
+        run: |
+          git clean -fdX
+          sudo autopkgtest "$LOFIBOX_CHANGES" "$GITHUB_WORKSPACE" -- null
+
+      - name: Upload Debian package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-package-${{ matrix.deb_arch }}
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.changes
+            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
+            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
+
+  build-raspi-armhf-package:
+    name: Build Debian package (armhf, Raspberry Pi ARMv6)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout LoFiBox-Zero
+        uses: actions/checkout@v4
+        with:
+          repository: vicliu624/LoFiBox-Zero
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
+
+      - name: Prepare artifact directory
+        run: mkdir -p armhf-artifacts
+
+      - name: Build in Raspberry Pi ARMv6 environment
+        uses: pguyot/arm-runner-action@v2
+        with:
+          base_image: dietpi:rpi_armv6_trixie
+          cpu: arm1176
+          image_additional_mb: 4096
+          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox_*_armhf.buildinfo"
+          copy_artifact_dest: armhf-artifacts
+          commands: |
+            set -eux
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              apt-utils \
+              build-essential \
+              cmake \
+              debhelper-compat \
+              desktop-file-utils \
+              devscripts \
+              dpkg-dev \
+              libdistro-info-perl \
+              libfreetype-dev \
+              libx11-dev \
+              libxkbcommon-dev \
+              lintian \
+              ninja-build \
+              pkgconf \
+              python3
+
+            export DEBEMAIL=maintainers@example.invalid
+            export DEBFULLNAME="LoFiBox contributors"
+
+            current_version="$(dpkg-parsechangelog -S Version)"
+            preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
+            apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+            package_distribution="unstable"
+            if [ "$preview_suffix" = "auto" ]; then
+              suffix="~lofibox${{ github.run_number }}"
+            else
+              suffix="$preview_suffix"
+            fi
+            dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
+
+            chmod +x debian/rules debian/tests/smoke
+            dpkg-buildpackage -us -uc -b
+            lintian ../lofibox_*_armhf.changes
+            test "$(dpkg-deb -f ../lofibox_*_armhf.deb Architecture)" = "armhf"
+
+      - name: Upload Raspberry Pi armhf artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-package-armhf
+          if-no-files-found: error
+          path: armhf-artifacts/*
+
+  publish-pages:
+    name: Publish website and APT repository
+    needs:
+      - build-native-package
+      - build-raspi-armhf-package
     runs-on: ubuntu-24.04
     environment:
       name: github-pages
@@ -48,28 +207,21 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
           path: LoFiBox-Zero
 
-      - name: Install packaging tools
+      - name: Download Debian package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: debian-package-*
+          path: debian-artifacts
+          merge-multiple: true
+
+      - name: Install publishing tools
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             aptly \
-            appstream \
             apt-utils \
-            autopkgtest \
-            build-essential \
-            cmake \
-            debhelper-compat \
-            desktop-file-utils \
-            devscripts \
             dpkg-dev \
             gnupg \
-            libdistro-info-perl \
-            libfreetype6-dev \
-            libx11-dev \
-            libxkbcommon-dev \
-            lintian \
-            ninja-build \
-            pkgconf \
             python3
 
       - name: Import APT signing key
@@ -109,7 +261,7 @@ jobs:
           fi
 
           if ! gpg --batch --import "$key_material"; then
-            echo "::error::LOFIBOX_APT_GPG_PRIVATE_KEY is not an importable OpenPGP private key. Use an ASCII-armored private key or base64-encoded private key material."
+            echo "::error::LOFIBOX_APT_GPG_PRIVATE_KEY is not an importable OpenPGP private key. Use an ASCII-armored private key or base64-encoded OpenPGP private key material."
             exit 1
           fi
 
@@ -129,45 +281,6 @@ jobs:
           echo "LOFIBOX_IMPORTED_GPG_KEY_ID=$signing_key" >> "$GITHUB_ENV"
           rm -f "$key_input" "$key_material"
 
-      - name: Apply preview version suffix
-        working-directory: LoFiBox-Zero
-        env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
-        run: |
-          current_version="$(dpkg-parsechangelog -S Version)"
-          preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-          apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-          package_distribution="unstable"
-          if [ "$preview_suffix" = "auto" ]; then
-            suffix="~lofibox${GITHUB_RUN_NUMBER}"
-          else
-            suffix="$preview_suffix"
-          fi
-          dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
-          dpkg-parsechangelog -S Version
-
-      - name: Build Debian package
-        working-directory: LoFiBox-Zero
-        run: |
-          chmod +x debian/rules debian/tests/smoke
-          dpkg-buildpackage -us -uc -b
-
-      - name: Locate Debian build metadata
-        run: |
-          changes_file="$(find "$GITHUB_WORKSPACE" -maxdepth 1 -name 'lofibox_*_amd64.changes' -print -quit)"
-          test -n "$changes_file"
-          test -s "$changes_file"
-          echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
-
-      - name: Run Lintian
-        run: lintian "$LOFIBOX_CHANGES"
-
-      - name: Run Autopkgtest Smoke
-        run: |
-          git -C LoFiBox-Zero clean -fdX
-          sudo autopkgtest "$LOFIBOX_CHANGES" LoFiBox-Zero -- null
-
       - name: Build Pages artifact
         env:
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
@@ -175,18 +288,31 @@ jobs:
           suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
           signing_key="${LOFIBOX_IMPORTED_GPG_KEY_ID:-$LOFIBOX_APT_GPG_KEY_ID}"
           test -n "$signing_key"
+          mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
+          if [ "${#changes_files[@]}" -lt 3 ]; then
+            printf 'Expected amd64, arm64, and armhf changes files, found %s:\n' "${#changes_files[@]}" >&2
+            printf '  %s\n' "${changes_files[@]}" >&2
+            exit 1
+          fi
+
+          changes_args=()
+          for changes_file in "${changes_files[@]}"; do
+            changes_args+=(--changes "$changes_file")
+          done
+
           chmod +x lofibox-apt/scripts/*.sh
           lofibox-apt/scripts/build-public-artifact.sh \
             --site lofibox-apt/site \
             --lofibox-zero LoFiBox-Zero \
             --suite "$suite" \
             --component main \
+            --architectures amd64,arm64,armhf \
             --output public \
             --repo-name lofibox-preview \
             --origin LoFiBox \
             --label "LoFiBox Preview" \
             --gpg-key "$signing_key" \
-            --changes "$LOFIBOX_CHANGES"
+            "${changes_args[@]}"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

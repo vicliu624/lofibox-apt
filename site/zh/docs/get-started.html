@@ -48,7 +48,7 @@
         <h1>安装与首次运行</h1>
         <p>
           LoFiBox Zero 是 Linux-first 项目。当前第三方 APT 源用于 Debian 官方源收录前的安装和测试，
-          最常用目标是 Debian trixie / amd64。
+          当前会发布 Debian trixie 的 amd64、适合 CM4/CM5 64-bit 系统的 arm64，以及适合 CM0/ARMv6 的 armhf 包。
         </p>
 
         <h2>1. 添加预览 APT 源</h2>
@@ -61,7 +61,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64
+Architectures: amd64 arm64 armhf
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF
 
