@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TUI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero Terminal UI guide.">
+    <link rel="alternate" hreflang="en" href="tui.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/tui.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html" aria-current="page">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="tui.html" aria-current="true">EN</a>
+            <a href="../zh/docs/tui.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html" aria-current="page">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Terminal UI</p>
+        <h1>TUI: Native Terminal Product Interface</h1>
+        <p>
+          LoFiBox TUI is designed for SSH, Linux desktop terminals, headless servers, small Linux devices, and developer/creator workflows.
+        </p>
+
+        <h2>Launch Modes</h2>
+        <pre><code>lofibox tui
+lofibox tui dashboard
+lofibox tui now
+lofibox tui lyrics
+lofibox tui spectrum
+lofibox tui queue
+lofibox tui eq
+lofibox-tui --theme amber --charset unicode</code></pre>
+
+        <h2>Dashboard</h2>
+        <p>
+          Dashboard is organized as Header / Now Playing / Progress / Spectrum + Lyrics + Queue / Source + EQ + Diagnostics / Footer.
+          It reads runtime snapshots and event streams; it does not access the audio backend, lyrics provider, or library scanner directly.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/tui/01-dashboard-unicode.png" alt="LoFiBox TUI Dashboard">
+          <figcaption>Dashboard: Now Playing, progress, spectrum, lyrics, queue, and source status.</figcaption>
+        </figure>
+
+        <h2>Lyrics</h2>
+        <p>
+          Lyrics mode focuses on scrolling lyrics. Synchronized lyrics highlight the current line, while plain lyrics fill the visible window.
+          When lyrics are missing, it shows embedded, local .lrc, and online-provider source status.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/tui/02-lyrics-unicode.png" alt="LoFiBox TUI Lyrics">
+          <figcaption>Lyrics: current-line highlighting for SSH sessions or a dedicated lyrics window.</figcaption>
+        </figure>
+
+        <h2>Spectrum</h2>
+        <p>
+          Spectrum mode uses the runtime visualization projection. The default display has 10 bands and can expand to 16/32 bands,
+          bars, waveform, VU meter, peak hold, and decay.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/tui/03-spectrum-unicode.png" alt="LoFiBox TUI Spectrum">
+          <figcaption>Spectrum: runtime supplies spectrum frames during playback; TUI only renders them.</figcaption>
+        </figure>
+
+        <h2>Queue</h2>
+        <p>
+          Queue mode displays the active queue, active index, title, artist, duration, and source label.
+          Selection, jump, delete, and move actions map back to runtime commands.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/tui/04-queue-unicode.png" alt="LoFiBox TUI Queue">
+          <figcaption>Queue: inspect and control the playback queue from the terminal.</figcaption>
+        </figure>
+
+        <h2>Character Sets and Themes</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Setting</th>
+                <th>Command</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Unicode Rich</td>
+                <td><code>lofibox tui --charset unicode</code></td>
+                <td>Default mode with box drawing, spectrum blocks, and playback symbols.</td>
+              </tr>
+              <tr>
+                <td>ASCII Safe</td>
+                <td><code>lofibox tui --charset ascii</code></td>
+                <td>Compatibility mode using <code>+</code> / <code>-</code> / <code>|</code> and <code>#</code> progress bars.</td>
+              </tr>
+              <tr>
+                <td>Minimal</td>
+                <td><code>lofibox tui --charset minimal</code></td>
+                <td>For very narrow or log-like environments, keeping only core state and necessary prompts.</td>
+              </tr>
+              <tr>
+                <td>Themes</td>
+                <td><code>--theme dark|light|amber|mono --no-color</code></td>
+                <td>Color is enhancement only; no-color mode must remain fully usable.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Responsive Layouts</h2>
+        <p>TUI switches layout by terminal size and shows an explicit error below 32x8.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Layout</th>
+                <th>Size</th>
+                <th>Focus</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Wide</td><td>&gt;= 100x30</td><td>Spectrum / Lyrics / Queue in three columns.</td></tr>
+              <tr><td>Normal</td><td>&gt;= 80x24</td><td>Now Playing, progress, Spectrum, Lyrics, Queue sections.</td></tr>
+              <tr><td>Compact</td><td>&gt;= 60x16</td><td>Status, progress, spectrum, current lyric, next track.</td></tr>
+              <tr><td>Micro</td><td>&gt;= 40x10</td><td>Title, time, volume, short spectrum, current lyric.</td></tr>
+              <tr><td>Tiny</td><td>&gt;= 32x8</td><td>Title, time, short spectrum, exit hint.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Keyboard Shortcuts</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Key</th><th>Action</th><th>Runtime Mapping</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Space</td><td>Play / pause</td><td>PlaybackToggle</td></tr>
+              <tr><td>n / p</td><td>Next / previous</td><td>QueueStep(+1/-1)</td></tr>
+              <tr><td>s</td><td>Stop</td><td>PlaybackStop</td></tr>
+              <tr><td>Left / Right</td><td>Seek -5s / +5s</td><td>PlaybackSeek</td></tr>
+              <tr><td>e</td><td>Toggle EQ</td><td>EqEnable / EqDisable</td></tr>
+              <tr><td>l / v / Q</td><td>Lyrics / Spectrum / Queue view</td><td>TUI local focus</td></tr>
+              <tr><td>/</td><td>Search mode</td><td>Runtime query</td></tr>
+              <tr><td>:</td><td>Command Palette</td><td>Controlled runtime command, not shell execution</td></tr>
+              <tr><td>q</td><td>Quit TUI</td><td>Closes the interface only; does not send stop</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notice">
+          <strong>Safety boundary:</strong>
+          TUI must not execute arbitrary shell commands, read raw credentials, bypass the runtime command bus, scan libraries directly, or call the playback backend directly.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox TUI guide.</span>
+        <span><a href="cli.html">Next: CLI</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

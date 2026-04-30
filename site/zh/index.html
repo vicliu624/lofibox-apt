@@ -1,0 +1,232 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LoFiBox Zero | Linux-first 音乐播放器</title>
+    <meta
+      name="description"
+      content="LoFiBox Zero 官方门户。面向 Linux 小屏设备、桌面、终端、远程媒体库和自动化工作流的音乐播放器。"
+    >
+    <link rel="alternate" hreflang="en" href="../index.html">
+    <link rel="alternate" hreflang="zh-Hans" href="index.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="index.html" aria-current="page">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="#install">安装</a>
+          <a href="docs/get-started.html">开始使用</a>
+          <a href="docs/gui.html">GUI</a>
+          <a href="docs/tui.html">TUI</a>
+          <a href="docs/cli.html">CLI</a>
+          <a href="docs/remote-sources.html">远程库</a>
+          <a href="https://github.com/vicliu624/LoFiBox-Zero">GitHub</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../index.html">EN</a>
+            <a href="index.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="wrap hero">
+        <div>
+          <p class="eyebrow">Linux-first music player</p>
+          <h1>LoFiBox Zero</h1>
+          <p class="lead">
+            面向 Cardputer Zero、Raspberry Pi、Linux 桌面、SSH 终端和远程媒体库的音乐播放器。
+            它把 GUI、TUI、CLI 和未来 Agent 接口都建立在同一套 runtime 上。
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#install">安装预览版</a>
+            <a class="button" href="docs/index.html">阅读文档</a>
+            <a class="button" href="docs/packaging.html">APT 源说明</a>
+          </div>
+        </div>
+
+        <div class="screenshot-stack" aria-label="产品界面预览">
+          <figure class="shot">
+            <img src="../assets/images/gui/06-now-playing.png" alt="LoFiBox GUI Now Playing 界面">
+            <figcaption>320x170 GUI：Now Playing、频谱、歌词与播放状态。</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/images/tui/01-dashboard-unicode.png" alt="LoFiBox TUI Dashboard 界面">
+            <figcaption>终端原生 TUI：Dashboard、Lyrics、Spectrum、Queue。</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <section id="install">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Preview APT repository</p>
+              <h2>先通过第三方源安装，后续进入 Debian 官方源</h2>
+            </div>
+            <p>
+              当前 GitHub Pages 同时承担两个职责：根目录是给人阅读的官方网站，
+              <code>/debian</code> 是给 <code>apt</code> 使用的软件源目录。两者分离发布，避免安装入口被官网内容污染。
+            </p>
+          </div>
+
+          <div class="install-box">
+            <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF
+
+sudo apt update
+sudo apt install lofibox</code></pre>
+
+            <div class="notice">
+              <strong>这是预览源。</strong>
+              它用于 Debian 官方源收录前的用户安装与测试。版本可能带有
+              <code>~lofibox&lt;run&gt;</code> 后缀；稳定发行流程进入 Debian 官方源后，这里会保留为预览通道。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Interfaces</p>
+              <h2>三种正式入口</h2>
+            </div>
+            <p>
+              GUI 负责小屏和桌面窗口，TUI 负责终端原生控制台，CLI 负责一次性命令、脚本、systemd、测试和 Agent。
+              它们共享runtime。
+            </p>
+          </div>
+
+          <div class="grid">
+            <article class="card">
+              <h3>GUI</h3>
+              <p>适合 320x170 小屏、X11 桌面窗口和设备前面板。覆盖主菜单、媒体库、搜索、Now Playing、歌词和 EQ。</p>
+              <div class="tag-list">
+                <span class="tag">Framebuffer</span>
+                <span class="tag">X11</span>
+                <span class="tag">低分辨率设备</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>TUI</h3>
+              <p>终端里的 Now Playing + Lyrics + Spectrum + Queue + EQ 控制台。适合 SSH、服务器和开发者工作流。</p>
+              <div class="tag-list">
+                <span class="tag">ANSI</span>
+                <span class="tag">Unicode / ASCII</span>
+                <span class="tag">无桌面环境</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>CLI</h3>
+              <p>面向人和机器的命令面。默认人类可读，<code>--json</code> / <code>--porcelain</code> 适合脚本和 Agent。</p>
+              <div class="tag-list">
+                <span class="tag">稳定退出码</span>
+                <span class="tag">结构化输出</span>
+                <span class="tag">Agent-friendly</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Core domains</p>
+              <h2>播放器核心能力</h2>
+            </div>
+            <p>
+              LoFiBox是本地文件播放器。它把本地媒体库、远程源、元数据治理、歌词、封面、指纹、缓存和 EQ
+              都纳入同一套产品对象模型。
+            </p>
+          </div>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>本地媒体库与搜索</h3>
+              <p>
+                支持媒体根目录扫描、索引状态、曲目/专辑/艺人/风格查询、统一搜索和播放队列。CLI 与 GUI 搜索使用同一套媒体项语义。
+              </p>
+            </article>
+            <article class="card">
+              <h3>远程媒体源</h3>
+              <p>
+                远程源分成 <code>source</code> 配置层和 <code>remote</code> 浏览/解析层，覆盖 Jellyfin、Emby、
+                Navidrome/OpenSubsonic、Direct URL、Internet Radio、Playlist Manifest、HLS/DASH、SMB/NFS/WebDAV/FTP/SFTP、DLNA/UPnP。
+              </p>
+            </article>
+            <article class="card">
+              <h3>元数据、歌词、封面、指纹</h3>
+              <p>
+                区分 lookup、diff、apply、cache、writeback 与 fingerprint index，避免把“自动补全”和“写回音乐文件”混成一个危险动作。
+              </p>
+            </article>
+            <article class="card">
+              <h3>EQ / DSP</h3>
+              <p>
+                支持 10 段图形 EQ、preset、preamp、ReplayGain、loudness、limiter、balance、HPF/LPF 以及设备/内容/source 绑定的产品语义。
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Screens</p>
+              <h2>界面预览</h2>
+            </div>
+            <p>GUI、TUI 和 CLI 共享同一套 runtime，让桌面窗口、终端控制台和脚本输出保持一致的播放状态与媒体库语义。</p>
+          </div>
+
+          <div class="grid two">
+            <figure class="figure">
+              <img src="../assets/images/gui/04-search.png" alt="LoFiBox GUI 搜索窗口">
+              <figcaption>GUI 搜索：跨本地库和远程源的统一入口。</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="../assets/images/gui/11-lyrics-hey-ya.png" alt="LoFiBox GUI 歌词界面">
+              <figcaption>GUI 歌词：同步歌词与当前行高亮。</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="../assets/images/tui/02-lyrics-unicode.png" alt="LoFiBox TUI 歌词界面">
+              <figcaption>TUI Lyrics：终端中的歌词滚动投影。</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="../assets/images/cli/10-now-json.png" alt="LoFiBox CLI JSON 状态输出">
+              <figcaption>CLI JSON：面向脚本、测试和 Agent 的状态输出。</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Zero official portal and preview APT repository.</span>
+        <span><a href="docs/packaging.html">APT 源</a> · <a href="docs/index.html">文档</a> · <a href="https://github.com/vicliu624/LoFiBox-Zero">源码</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

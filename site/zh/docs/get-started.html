@@ -1,0 +1,154 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Get Started | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 安装和首次使用指南。">
+    <link rel="alternate" hreflang="en" href="../../docs/get-started.html">
+    <link rel="alternate" hreflang="zh-Hans" href="get-started.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html" aria-current="page">开始使用</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/get-started.html">EN</a>
+            <a href="get-started.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html" aria-current="page">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Get Started</p>
+        <h1>安装与首次运行</h1>
+        <p>
+          LoFiBox Zero 是 Linux-first 项目。当前第三方 APT 源用于 Debian 官方源收录前的安装和测试，
+          最常用目标是 Debian trixie / amd64。
+        </p>
+
+        <h2>1. 添加预览 APT 源</h2>
+        <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF
+
+sudo apt update
+sudo apt install lofibox</code></pre>
+
+        <h2>2. 检查环境</h2>
+        <p>
+          首次安装后先跑 doctor。它会检查 XDG 路径、媒体根目录、播放后端、helper、cache、credential store 等基础环境。
+        </p>
+        <pre><code>lofibox version
+lofibox doctor
+lofibox doctor --json</code></pre>
+
+        <figure class="figure">
+          <img src="../../assets/images/cli/03-doctor-json.png" alt="lofibox doctor --json 输出">
+          <figcaption>doctor 的 JSON 输出适合自动化测试、安装后 smoke test 和 Agent 诊断。</figcaption>
+        </figure>
+
+        <h2>3. 启动界面</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>入口</th>
+                <th>命令</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GUI / X11</td>
+                <td><code>lofibox</code></td>
+                <td>在 Linux 桌面或设备显示环境中启动图形界面。</td>
+              </tr>
+              <tr>
+                <td>TUI</td>
+                <td><code>lofibox tui</code> 或 <code>lofibox-tui</code></td>
+                <td>在终端中启动 Dashboard。适合 SSH、服务器和开发者工作流。</td>
+              </tr>
+              <tr>
+                <td>CLI</td>
+                <td><code>lofibox now --json</code></td>
+                <td>查询 runtime 状态，不进入交互界面。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>4. 扫描媒体库并播放</h2>
+        <p>本地库先配置媒体根目录，再扫描、搜索、播放或加入队列。</p>
+        <pre><code>lofibox config set media.roots '["/home/vicliu/Music"]'
+lofibox library scan --incremental
+lofibox library status
+lofibox search "Outkast"
+lofibox play "/home/vicliu/Music/Outkast - Hey Ya!.mp3"
+lofibox now --json</code></pre>
+
+        <h2>5. 远程库最小流程</h2>
+        <p>
+          远程媒体库分为 profile 配置、credential 凭据、remote 浏览与 stream resolve。凭据默认不要放在命令行参数里，
+          使用 stdin 形式避免进入 shell history 和进程列表。
+        </p>
+        <pre><code>lofibox credentials set jellyfin-home --password-stdin
+lofibox source add jellyfin \
+  --id jellyfin-home \
+  --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home
+
+lofibox source probe jellyfin-home
+lofibox remote browse jellyfin-home /albums
+lofibox remote search jellyfin-home "radiohead"</code></pre>
+
+        <div class="notice">
+          <strong>退出界面不会停止播放。</strong>
+          GUI/TUI 是 runtime state 的投影；播放事实在 runtime 中，除非执行 stop 命令，否则关闭界面不应该中断播放。
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>Get started with LoFiBox Zero.</span>
+        <span><a href="../index.html">官网首页</a> · <a href="cli.html">CLI 文档</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

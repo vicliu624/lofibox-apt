@@ -28,6 +28,9 @@ concurrency:
 jobs:
   build-and-publish:
     runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout APT repo
@@ -48,6 +51,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             aptly \
             appstream \
+            apt-utils \
+            autopkgtest \
             build-essential \
             cmake \
             debhelper-compat \
@@ -55,7 +60,7 @@ jobs:
             devscripts \
             dpkg-dev \
             gnupg \
-            libfreetype-dev \
+            libfreetype6-dev \
             libx11-dev \
             libxkbcommon-dev \
             lintian \
@@ -91,12 +96,30 @@ jobs:
           chmod +x debian/rules debian/tests/smoke
           dpkg-buildpackage -us -uc -b
 
-      - name: Build signed APT repository
+      - name: Locate Debian build metadata
+        run: |
+          changes_file="$(find "$GITHUB_WORKSPACE" -maxdepth 1 -name 'lofibox_*_amd64.changes' -print -quit)"
+          test -n "$changes_file"
+          test -s "$changes_file"
+          echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
+
+      - name: Run Lintian
+        run: lintian "$LOFIBOX_CHANGES"
+
+      - name: Run Autopkgtest Smoke
+        run: |
+          git -C LoFiBox-Zero clean -fdX
+          sudo autopkgtest "$LOFIBOX_CHANGES" LoFiBox-Zero -- null
+
+      - name: Build Pages artifact
         env:
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
         run: |
           test -n "$LOFIBOX_APT_GPG_KEY_ID"
-          LoFiBox-Zero/scripts/build-github-pages-apt-repository.sh \
+          chmod +x lofibox-apt/scripts/*.sh
+          lofibox-apt/scripts/build-public-artifact.sh \
+            --site lofibox-apt/site \
+            --lofibox-zero LoFiBox-Zero \
             --suite "${{ inputs.suite }}" \
             --component main \
             --output public \
@@ -104,7 +127,10 @@ jobs:
             --origin LoFiBox \
             --label "LoFiBox Preview" \
             --gpg-key "$LOFIBOX_APT_GPG_KEY_ID" \
-            --changes "$(find . -maxdepth 1 -name 'lofibox_*_amd64.changes' | head -n 1)"
+            --changes "$LOFIBOX_CHANGES"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -112,4 +138,5 @@ jobs:
           path: public
 
       - name: Deploy Pages
+        id: deployment
         uses: actions/deploy-pages@v4

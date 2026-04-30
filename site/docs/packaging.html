@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>APT Repository and Publishing | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero GitHub Pages APT repository guide.">
+    <link rel="alternate" hreflang="en" href="packaging.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/packaging.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html" aria-current="page">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="packaging.html" aria-current="true">EN</a>
+            <a href="../zh/docs/packaging.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html" aria-current="page">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Packaging</p>
+        <h1>GitHub Pages APT Repository</h1>
+        <p>
+          This repository publishes both the official website and the preview APT repository.
+          The website is a human-readable portal; the APT repository is a machine-readable directory for <code>apt</code>.
+          The machine path stays under <code>/debian</code> to preserve compatibility with the published <code>lofibox.sources</code> example.
+        </p>
+
+        <h2>Directory Layout</h2>
+        <pre><code>public/
+  index.html
+  assets/
+  docs/
+  zh/
+  .nojekyll
+  lofibox-archive-keyring.pgp
+  debian/
+    dists/trixie/...
+    pool/...</code></pre>
+
+        <h2>User Install Entry</h2>
+        <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF</code></pre>
+
+        <h2>Publishing Flow</h2>
+        <p>
+          The GitHub Actions workflow checks out <code>lofibox-apt</code> and <code>LoFiBox-Zero</code>, builds the Debian package,
+          generates a signed APT repository with a GPG key, copies <code>site/</code> into the same Pages artifact root,
+          validates the website and APT boundaries, then deploys the artifact with GitHub Pages.
+        </p>
+        <ol>
+          <li>Manually trigger the <code>Publish LoFiBox APT Repository</code> workflow.</li>
+          <li>Select <code>source_ref</code>, usually the LoFiBox-Zero main branch or a release tag.</li>
+          <li>Select the suite; the current default is <code>trixie</code>.</li>
+          <li>When preview_suffix is <code>auto</code>, the workflow generates a <code>~lofibox&lt;run_number&gt;</code> suffix.</li>
+          <li>The workflow builds packages, generates the repository, copies the website, validates <code>public/</code>, and deploys Pages.</li>
+        </ol>
+
+        <h2>Repository Setup</h2>
+        <p>
+          In GitHub repository settings, set Pages to <strong>GitHub Actions</strong> and add the two Actions secrets below.
+          The publishing workflow is manual so preview packages are intentionally cut from a chosen LoFiBox-Zero ref.
+        </p>
+
+        <h2>Secrets</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Secret</th><th>Use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>Imports the private key used for APT repository signing.</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>Selects the signing key for aptly / gpg.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Preview the Website Locally</h2>
+        <pre><code>cd lofibox-apt
+python3 -m http.server --directory site 8080
+# open the local preview in a browser</code></pre>
+
+        <h2>Simulate the Pages Artifact Locally</h2>
+        <pre><code>scripts/stage-pages-site.sh --site site --output public
+python3 -m http.server --directory public 8080</code></pre>
+
+        <div class="notice">
+          <strong>Boundary constraint:</strong>
+          Do not put HTML pages into <code>public/debian</code>, and do not move the Debian pool into website assets.
+          The website may link to the APT key and deb822 example, but it must not change the directory structure that apt clients depend on.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>APT repository and Pages publishing.</span>
+        <span><a href="../index.html">Official site</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

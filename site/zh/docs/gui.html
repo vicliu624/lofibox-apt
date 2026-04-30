@@ -1,0 +1,152 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GUI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 图形界面说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/gui.html">
+    <link rel="alternate" hreflang="zh-Hans" href="gui.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="gui.html" aria-current="page">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/gui.html">EN</a>
+            <a href="gui.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html" aria-current="page">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Graphical UI</p>
+        <h1>GUI：小屏图形产品界面</h1>
+        <p>
+          GUI 是 LoFiBox Zero 在 Linux framebuffer / X11 上的正式 presentation target。
+          它面向 320x170 这类小屏；界面优先保证当前状态、搜索、播放和队列可读。
+        </p>
+
+        <h2>主菜单</h2>
+        <p>
+          主菜单进入媒体库、搜索、Now Playing、Lyrics、EQ、Settings 等页面。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/01-main-menu.png" alt="LoFiBox GUI 主菜单">
+          <figcaption>主菜单：低分辨率屏幕上的主要入口。</figcaption>
+        </figure>
+
+        <h2>媒体库</h2>
+        <p>
+          媒体库来自 library index。GUI 显示 track / album / artist 等浏览入口，播放和排队动作最终映射到 runtime command。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/03-library.png" alt="LoFiBox GUI 媒体库">
+          <figcaption>媒体库：本地和远程媒体最终都统一为 MediaItem 语义。</figcaption>
+        </figure>
+
+        <h2>搜索</h2>
+        <p>
+          搜索窗口是跨本地库和远程源的统一入口。输入关键字后，结果按来源分组；选择结果可以直接播放，也可以加入队列。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/04-search.png" alt="LoFiBox GUI 搜索窗口">
+          <figcaption>搜索：用于快速定位 track、artist、album 或远程源内容。</figcaption>
+        </figure>
+
+        <h2>Now Playing</h2>
+        <p>
+          Now Playing 展示 runtime 投影中的当前曲目、播放状态、进度、频谱、来源和歌词摘要。
+          播放继续、暂停、下一首、上一首、seek 等动作由 runtime 控制。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/06-now-playing.png" alt="LoFiBox GUI Now Playing">
+          <figcaption>Now Playing：展示 Outkast - Hey Ya! 的播放状态、频谱和歌词摘要。</figcaption>
+        </figure>
+
+        <h2>Lyrics</h2>
+        <p>
+          歌词页面展示 runtime lyrics projection。同步歌词会突出当前行；纯文本歌词会作为普通歌词滚动展示。
+          无歌词时显示来源状态和后续 lookup / apply / writeback 的入口。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/11-lyrics-hey-ya.png" alt="LoFiBox GUI 歌词页面">
+          <figcaption>Lyrics：当前行高亮，来源与 offset 信息应由 runtime 投影提供。</figcaption>
+        </figure>
+
+        <h2>EQ / DSP</h2>
+        <p>
+          EQ 页面是 DSP domain 的图形投影。当前实现支持 10 段图形 EQ、启用/禁用、reset、preset 切换和实时热更新。
+        </p>
+        <figure class="figure">
+          <img src="../../assets/images/gui/05-equalizer.png" alt="LoFiBox GUI EQ 页面">
+          <figcaption>EQ：10 段 band 以及 preset 状态。</figcaption>
+        </figure>
+
+        <h3>内置 EQ presets</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Preset</th>
+                <th>适合场景</th>
+                <th>倾向</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Flat</td><td>默认或校准检查</td><td>所有 band 归零，EQ disabled</td></tr>
+              <tr><td>Bass Boost</td><td>耳机、低频不足的小音箱</td><td>提升 31/62/125Hz，轻微压高频</td></tr>
+              <tr><td>Treble Boost</td><td>暗声耳机、细节监听</td><td>提升 4k/8k/16kHz</td></tr>
+              <tr><td>Vocal</td><td>人声、播客、访谈</td><td>提升 500Hz 到 2kHz 的可懂度</td></tr>
+              <tr><td>Rock</td><td>摇滚、现场感</td><td>增强低频和高频，中低频略收</td></tr>
+              <tr><td>Pop</td><td>流行音乐</td><td>低频和高频略提，保留中频清晰度</td></tr>
+              <tr><td>Jazz</td><td>爵士、人声、小编制</td><td>温和低频与空气感</td></tr>
+              <tr><td>Classical</td><td>古典、原声</td><td>轻微提升 1k 到 8kHz</td></tr>
+              <tr><td>Electronic</td><td>电子、舞曲</td><td>低频和高频更强</td></tr>
+              <tr><td>Podcast / Speech</td><td>播客、语音内容</td><td>削低频噪声，提升语音频段</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>GUI 与 runtime 的边界</h2>
+        <ul>
+          <li>GUI 不直接读取凭据，不显示明文 token / password。</li>
+          <li>GUI 不直接控制 audio backend，而是提交播放、队列、EQ 等 runtime command。</li>
+          <li>关闭 GUI 不等于 stop；除非用户明确执行 stop，播放应该继续。</li>
+          <li>搜索、metadata、lyrics、artwork 等结果必须回到统一的产品对象。</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox GUI guide.</span>
+        <span><a href="tui.html">下一篇：TUI</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

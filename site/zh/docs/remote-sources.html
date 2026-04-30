@@ -1,0 +1,141 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>远程媒体库 | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 远程媒体源说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/remote-sources.html">
+    <link rel="alternate" hreflang="zh-Hans" href="remote-sources.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html" aria-current="page">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/remote-sources.html">EN</a>
+            <a href="remote-sources.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html" aria-current="page">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Remote Sources</p>
+        <h1>远程媒体库</h1>
+        <p>
+          LoFiBox 的远程能力有明确的 source / remote 边界：
+          source 管配置、认证、能力与生命周期；remote 管浏览、搜索、最近项目、收藏和流解析。
+        </p>
+
+        <h2>支持的源类型</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>类别</th><th>源类型</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>媒体服务器</td><td>Jellyfin、Emby、OpenSubsonic / Navidrome、Subsonic</td><td>目录、搜索、最近播放、收藏、stream resolve。</td></tr>
+              <tr><td>直接流</td><td>Direct URL、Internet Radio、Playlist Manifest</td><td>直播电台、单 URL、M3U/PLS 等清单。</td></tr>
+              <tr><td>流媒体协议</td><td>HLS、DASH</td><td>自适应流、直播、远程音频切片。</td></tr>
+              <tr><td>文件共享</td><td>SMB、NFS、WebDAV、FTP、SFTP</td><td>远程文件树作为媒体源。</td></tr>
+              <tr><td>局域网发现</td><td>DLNA / UPnP</td><td>家庭网络媒体设备浏览与播放。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>配置 source profile</h2>
+        <p>
+          profile 保存非秘密配置，例如 kind、id、name、base_url、username、credential_ref、TLS 策略。
+          secret 必须进入 credentials store。
+        </p>
+        <pre><code>printf '%s' "$JELLYFIN_PASSWORD" | lofibox credentials set jellyfin-home --password-stdin
+
+lofibox source add jellyfin \
+  --id jellyfin-home \
+  --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home \
+  --verify-peer true \
+  --allow-self-signed false</code></pre>
+
+        <h2>检查连接与能力</h2>
+        <p>
+          添加 profile 后先 probe。auth-status 与 capabilities 适合脚本判断一个远程源是否可用，以及它支持哪些目录和 stream 能力。
+        </p>
+        <pre><code>lofibox source list --json
+lofibox source show jellyfin-home --json
+lofibox source probe jellyfin-home
+lofibox source auth-status jellyfin-home --json
+lofibox source capabilities jellyfin-home --json</code></pre>
+
+        <figure class="figure">
+          <img src="../../assets/images/cli/04-source-list.png" alt="lofibox source list 输出">
+          <figcaption>source list：profile 可以显示 credential_ref，但不能显示 secret。</figcaption>
+        </figure>
+
+        <h2>浏览与搜索 remote</h2>
+        <p>
+          remote 命令只在 profile 可连接之后使用。浏览结果和本地库最终都被转换为统一 MediaItem，方便 GUI/TUI/CLI 用同一种方式播放。
+        </p>
+        <pre><code>lofibox remote browse jellyfin-home
+lofibox remote browse jellyfin-home /artists
+lofibox remote browse jellyfin-home /albums
+lofibox remote browse jellyfin-home /playlists
+lofibox remote browse jellyfin-home /stations
+lofibox remote recent jellyfin-home
+lofibox remote favorites jellyfin-home
+lofibox remote search jellyfin-home "outkast"</code></pre>
+
+        <h2>解析流并播放</h2>
+        <p>
+          resolve / stream-info 返回 redacted URL、codec、bitrate、seekable、live、buffer state 等诊断信息。
+          播放仍然通过 playback session，不由 remote 命令自己绕过 runtime。
+        </p>
+        <pre><code>lofibox remote resolve jellyfin-home item-123 --json
+lofibox remote stream-info jellyfin-home item-123 --json
+lofibox play --source jellyfin-home --item item-123
+lofibox now --fields playback.status,playback.title,remote.connection_status --json</code></pre>
+
+        <h2>安全约束</h2>
+        <ul>
+          <li>remote profile 中保存 credential_ref，不保存明文 password/token。</li>
+          <li>CLI 和 TUI 只显示 redacted URL。</li>
+          <li>认证失败返回明确 exit code 和 structured error，便于自动化修复。</li>
+          <li>远程 stream 进入统一 playback pipeline，因此 EQ、lyrics projection、runtime diagnostics 与本地播放保持一致。</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>Remote source guide.</span>
+        <span><a href="metadata-lyrics.html">下一篇：元数据与歌词</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

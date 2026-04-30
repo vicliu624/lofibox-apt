@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GUI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero graphical interface guide.">
+    <link rel="alternate" hreflang="en" href="gui.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/gui.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html" aria-current="page">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="gui.html" aria-current="true">EN</a>
+            <a href="../zh/docs/gui.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html" aria-current="page">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Graphical UI</p>
+        <h1>GUI: Small-screen Product Interface</h1>
+        <p>
+          The GUI is LoFiBox Zero's first-class presentation target for Linux framebuffer and X11.
+          It is designed for small displays such as 320x170 screens, with current state, search, playback, and queue readability as the priority.
+        </p>
+
+        <h2>Main Menu</h2>
+        <p>
+          The main menu opens Library, Search, Now Playing, Lyrics, EQ, Settings, and other product areas.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/01-main-menu.png" alt="LoFiBox GUI main menu">
+          <figcaption>Main menu: primary entry points on a low-resolution screen.</figcaption>
+        </figure>
+
+        <h2>Library</h2>
+        <p>
+          The library view comes from the library index. It exposes track, album, and artist browsing while play and queue actions map back to runtime commands.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/03-library.png" alt="LoFiBox GUI library">
+          <figcaption>Library: local and remote media eventually share the same MediaItem semantics.</figcaption>
+        </figure>
+
+        <h2>Search</h2>
+        <p>
+          Search is the unified entry point across local libraries and remote sources. Results are grouped by source; selecting one can play it immediately or add it to the queue.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/04-search.png" alt="LoFiBox GUI search window">
+          <figcaption>Search: quickly find tracks, artists, albums, or remote-source content.</figcaption>
+        </figure>
+
+        <h2>Now Playing</h2>
+        <p>
+          Now Playing displays the current track, playback state, progress, spectrum, source, and lyrics summary from the runtime projection.
+          Continue, pause, next, previous, and seek actions are controlled by the runtime.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/06-now-playing.png" alt="LoFiBox GUI Now Playing">
+          <figcaption>Now Playing: playback state, spectrum, and lyrics summary for Outkast - Hey Ya!.</figcaption>
+        </figure>
+
+        <h2>Lyrics</h2>
+        <p>
+          The Lyrics page displays the runtime lyrics projection. Synchronized lyrics highlight the current line; plain text lyrics scroll as regular text.
+          When lyrics are unavailable, the page shows source status and entry points for lookup, apply, and writeback.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/11-lyrics-hey-ya.png" alt="LoFiBox GUI lyrics page">
+          <figcaption>Lyrics: current-line highlighting with source and offset information supplied by the runtime projection.</figcaption>
+        </figure>
+
+        <h2>EQ / DSP</h2>
+        <p>
+          The EQ page is the graphical projection of the DSP domain. The current implementation supports 10-band graphic EQ,
+          enable/disable, reset, preset switching, and live updates.
+        </p>
+        <figure class="figure">
+          <img src="../assets/images/gui/05-equalizer.png" alt="LoFiBox GUI EQ page">
+          <figcaption>EQ: 10 bands plus preset state.</figcaption>
+        </figure>
+
+        <h3>Built-in EQ Presets</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Preset</th>
+                <th>Best for</th>
+                <th>Tendency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Flat</td><td>Default playback or calibration checks</td><td>All bands at zero, EQ disabled</td></tr>
+              <tr><td>Bass Boost</td><td>Headphones and small speakers with weak low end</td><td>Boosts 31/62/125Hz, slightly restrains highs</td></tr>
+              <tr><td>Treble Boost</td><td>Dark headphones and detail monitoring</td><td>Boosts 4k/8k/16kHz</td></tr>
+              <tr><td>Vocal</td><td>Vocals, podcasts, interviews</td><td>Improves intelligibility from 500Hz to 2kHz</td></tr>
+              <tr><td>Rock</td><td>Rock and live energy</td><td>Enhances lows and highs, slightly trims low mids</td></tr>
+              <tr><td>Pop</td><td>Pop music</td><td>Slightly lifts lows and highs while keeping mids clear</td></tr>
+              <tr><td>Jazz</td><td>Jazz, vocals, small ensembles</td><td>Warm low end and air</td></tr>
+              <tr><td>Classical</td><td>Classical and acoustic music</td><td>Slight lift from 1k to 8kHz</td></tr>
+              <tr><td>Electronic</td><td>Electronic and dance music</td><td>Stronger low end and highs</td></tr>
+              <tr><td>Podcast / Speech</td><td>Podcasts and spoken-word content</td><td>Reduces low-frequency noise and lifts speech bands</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>GUI and Runtime Boundaries</h2>
+        <ul>
+          <li>The GUI does not read credentials or display raw tokens/passwords.</li>
+          <li>The GUI does not control the audio backend directly; it submits playback, queue, and EQ runtime commands.</li>
+          <li>Closing the GUI is not stop; playback should continue unless the user explicitly sends stop.</li>
+          <li>Search, metadata, lyrics, artwork, and other results must return to the unified product objects.</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox GUI guide.</span>
+        <span><a href="tui.html">Next: TUI</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

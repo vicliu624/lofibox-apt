@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CLI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox CLI guide for people, scripts, and Agents.">
+    <link rel="alternate" hreflang="en" href="cli.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/cli.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html" aria-current="page">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="cli.html" aria-current="true">EN</a>
+            <a href="../zh/docs/cli.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html" aria-current="page">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Command Line</p>
+        <h1>CLI: For People and Machines</h1>
+        <p>
+          The <code>lofibox</code> CLI has two layers. Direct and durable commands operate on configuration, credential references,
+          media libraries, cache, and other persistent objects. Runtime commands connect to a running LoFiBox instance to read playback state
+          or submit playback control. Output is human-readable by default, while <code>--json</code>, <code>--porcelain</code>,
+          and <code>--fields</code> are for scripts and Agents.
+        </p>
+
+        <figure class="figure">
+          <img src="../assets/images/cli/01-help.png" alt="lofibox --help output">
+          <figcaption>CLI help is for quick human lookup; Agents should prefer the JSON discovery surface.</figcaption>
+        </figure>
+
+        <h2>Stable Exit Codes</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Exit code</th><th>Meaning</th><th>Typical recovery</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td>Success</td><td>Continue to the next step.</td></tr>
+              <tr><td>2</td><td>User input error</td><td>Read structured error / help schema and fix arguments.</td></tr>
+              <tr><td>3</td><td>Resource not found</td><td>Check media id, profile id, cache key, or path.</td></tr>
+              <tr><td>4</td><td>Missing credentials or authentication failure</td><td>Check the credential reference and rewrite the secret through stdin.</td></tr>
+              <tr><td>5</td><td>Network or runtime transport failure</td><td>Check socket, remote service, and network connectivity.</td></tr>
+              <tr><td>6</td><td>Playback backend failure</td><td>Run doctor and check PipeWire/ALSA/output device state.</td></tr>
+              <tr><td>7</td><td>Persistence failure</td><td>Check XDG directories, permissions, disk space, and run persistence repair.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Agent-friendly Discovery</h2>
+        <p>
+          Autonomous Agents should not guess from help text. Use machine-readable command discovery, field schemas, structured errors,
+          and nested field filtering.
+        </p>
+        <pre><code>lofibox commands --json
+lofibox help --json
+lofibox help runtime playback --json
+lofibox runtime playback --schema
+lofibox runtime playback --fields status,title,artist,elapsed,duration --json
+lofibox now --fields playback.status,playback.title,queue.active_index --json</code></pre>
+
+        <h2>Playback and Runtime State</h2>
+        <p>
+          Playback commands operate on the playback session. Query commands can fetch only the fields they need, avoiding large queue payloads.
+        </p>
+        <pre><code>lofibox now
+lofibox now --json
+lofibox runtime playback --json
+lofibox play "/home/vicliu/Music/Outkast - Hey Ya!.mp3"
+lofibox play --pause
+lofibox play --toggle
+lofibox play --next
+lofibox play --seek +10s
+lofibox play --repeat off
+lofibox play --shuffle on</code></pre>
+        <figure class="figure">
+          <img src="../assets/images/cli/10-now-json.png" alt="lofibox now --json output">
+          <figcaption><code>lofibox now --json</code>: the same runtime snapshot also powers TUI and future Agents.</figcaption>
+        </figure>
+
+        <h2>Queue</h2>
+        <p>
+          Queue is its own capability domain. It supports "queue without immediately playing" as well as viewing, removing, moving,
+          setting the active item, and saving/loading named queues.
+        </p>
+        <pre><code>lofibox queue show
+lofibox queue add "/home/vicliu/Music/track.flac"
+lofibox queue add --id 42
+lofibox queue remove 3
+lofibox queue move 5 2
+lofibox queue set 1
+lofibox queue clear
+lofibox queue save evening
+lofibox queue load evening</code></pre>
+
+        <h2>Local Library and Search</h2>
+        <p>
+          Library commands operate on the local index; search is the unified search entry across local and remote sources.
+          Keep them separate instead of folding them into one oversized command.
+        </p>
+        <pre><code>lofibox library scan --root ~/Music --incremental
+lofibox library status --json
+lofibox library list tracks
+lofibox library list albums
+lofibox library query tracks --artist "Outkast"
+lofibox library query tracks --recently-added
+lofibox search "hey ya"
+lofibox search "utada" --local
+lofibox search "radiohead" --source jellyfin-home</code></pre>
+        <figure class="figure">
+          <img src="../assets/images/cli/06-library-list-tracks.png" alt="lofibox library list tracks output">
+          <figcaption>library list tracks: CJK text renders completely, so Japanese and Chinese track metadata does not turn into missing glyph boxes.</figcaption>
+        </figure>
+
+        <h2>Source and Remote</h2>
+        <p>
+          <code>source</code> owns configuration, authentication, capabilities, and lifecycle.
+          <code>remote</code> owns browsing, search, recent items, favorites, and stream resolution after a connection is established.
+        </p>
+        <pre><code>lofibox source list --json
+lofibox source add jellyfin --id home --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home
+lofibox source probe home
+lofibox source capabilities home
+lofibox remote browse home /albums
+lofibox remote search home "radiohead"
+lofibox remote resolve home item-123
+lofibox remote stream-info home item-123</code></pre>
+        <figure class="figure">
+          <img src="../assets/images/cli/04-source-list.png" alt="lofibox source list output">
+          <figcaption>source list: shows profile and redacted information, never raw secrets.</figcaption>
+        </figure>
+
+        <h2>Credentials</h2>
+        <p>
+          Credentials and profiles are stored separately. Do not pass passwords or tokens as command-line arguments by default; stdin is preferred.
+        </p>
+        <pre><code>lofibox credentials list
+lofibox credentials show-ref jellyfin-home
+lofibox credentials set jellyfin-home --username vicliu
+printf '%s' "$JELLYFIN_PASSWORD" | lofibox credentials set jellyfin-home --password-stdin
+printf '%s' "$NAVIDROME_TOKEN" | lofibox credentials set navidrome-home --token-stdin
+lofibox credentials validate jellyfin-home
+lofibox credentials delete old-ref</code></pre>
+
+        <h2>EQ / DSP</h2>
+        <pre><code>lofibox eq show
+lofibox eq enable
+lofibox eq preset list
+lofibox eq preset apply "Bass Boost"
+lofibox eq band 31 +3
+lofibox eq preamp -4.5
+lofibox eq replaygain track
+lofibox eq limiter on
+lofibox eq loudness on
+lofibox eq balance -10
+lofibox eq bind device default "Podcast / Speech"</code></pre>
+
+        <h2>Metadata / Lyrics / Artwork / Fingerprint</h2>
+        <p>
+          ID3 completion, lyrics, artwork, and fingerprints are split into lookup, diff, apply, and writeback.
+          This lets users inspect candidates and changes before accepting them and avoids automatic flows mutating music files.
+        </p>
+        <pre><code>lofibox metadata lookup "/music/track.mp3"
+lofibox metadata diff "/music/track.mp3"
+lofibox metadata apply "/music/track.mp3"
+lofibox metadata writeback "/music/track.mp3"
+lofibox lyrics lookup "/music/track.mp3"
+lofibox lyrics apply "/music/track.mp3"
+lofibox lyrics writeback "/music/track.mp3"
+lofibox artwork lookup "/music/track.mp3"
+lofibox fingerprint generate "/music/track.mp3"
+lofibox fingerprint match "/music/track.mp3"</code></pre>
+
+        <h2>Cache / Persistence / Diagnostics</h2>
+        <pre><code>lofibox cache status
+lofibox cache list
+lofibox cache purge artwork
+lofibox cache gc
+lofibox persistence status
+lofibox persistence save
+lofibox persistence repair
+lofibox paths --json
+lofibox doctor --json</code></pre>
+
+        <div class="notice">
+          <strong>Agent rules:</strong>
+          read state with <code>--json</code> and <code>--fields</code>; write secrets through stdin;
+          for commands that mutate state, inspect <code>mutates</code> and <code>requires_runtime</code> in the command schema first.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox CLI guide.</span>
+        <span><a href="remote-sources.html">Next: Remote Sources</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

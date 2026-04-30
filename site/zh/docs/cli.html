@@ -1,0 +1,228 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CLI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox CLI 中文说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/cli.html">
+    <link rel="alternate" hreflang="zh-Hans" href="cli.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html" aria-current="page">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/cli.html">EN</a>
+            <a href="cli.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html" aria-current="page">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Command Line</p>
+        <h1>CLI：给人，也给机器</h1>
+        <p>
+          <code>lofibox</code> CLI 分为两层：direct/durable 命令操作配置、凭据引用、媒体库、cache 等持久对象；
+          runtime 命令连接正在运行的 LoFiBox 实例，读取播放状态或提交播放控制。默认输出给人看，
+          <code>--json</code>、<code>--porcelain</code>、<code>--fields</code> 给脚本和 Agent 使用。
+        </p>
+
+        <figure class="figure">
+          <img src="../../assets/images/cli/01-help.png" alt="lofibox --help 输出">
+          <figcaption>CLI help：用于人类速查；Agent 应优先使用 JSON discovery surface。</figcaption>
+        </figure>
+
+        <h2>稳定退出码</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Exit code</th><th>含义</th><th>典型恢复</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td>成功</td><td>继续下一步。</td></tr>
+              <tr><td>2</td><td>用户输入错误</td><td>读取 structured error / help schema，修正参数。</td></tr>
+              <tr><td>3</td><td>资源不存在</td><td>检查 media id、profile id、cache key 或路径。</td></tr>
+              <tr><td>4</td><td>凭据缺失或认证失败</td><td>检查 credential ref，使用 stdin 重新写入 secret。</td></tr>
+              <tr><td>5</td><td>网络或 runtime transport 失败</td><td>检查 socket、远程服务、网络连通性。</td></tr>
+              <tr><td>6</td><td>播放后端失败</td><td>运行 doctor，检查 PipeWire/ALSA/输出设备。</td></tr>
+              <tr><td>7</td><td>持久化失败</td><td>检查 XDG 目录、权限、磁盘空间，执行 persistence repair。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Agent-friendly discovery</h2>
+        <p>
+          自主 Agent 不应该靠猜 help 文本。推荐入口是机器可读命令发现、字段 schema、结构化错误和嵌套字段过滤。
+        </p>
+        <pre><code>lofibox commands --json
+lofibox help --json
+lofibox help runtime playback --json
+lofibox runtime playback --schema
+lofibox runtime playback --fields status,title,artist,elapsed,duration --json
+lofibox now --fields playback.status,playback.title,queue.active_index --json</code></pre>
+
+        <h2>播放与 runtime 状态</h2>
+        <p>
+          播放命令操作的是 playback session。查询命令可只取必要字段，避免拉回巨大 queue。
+        </p>
+        <pre><code>lofibox now
+lofibox now --json
+lofibox runtime playback --json
+lofibox play "/home/vicliu/Music/Outkast - Hey Ya!.mp3"
+lofibox play --pause
+lofibox play --toggle
+lofibox play --next
+lofibox play --seek +10s
+lofibox play --repeat off
+lofibox play --shuffle on</code></pre>
+        <figure class="figure">
+          <img src="../../assets/images/cli/10-now-json.png" alt="lofibox now --json 输出">
+          <figcaption><code>lofibox now --json</code>：同一份 runtime snapshot 也供 TUI 和未来 Agent 使用。</figcaption>
+        </figure>
+
+        <h2>队列</h2>
+        <p>
+          queue 是独立能力域。它支持“排队但不立即播放”，也支持查看、移除、移动、设置当前项和保存/加载命名队列。
+        </p>
+        <pre><code>lofibox queue show
+lofibox queue add "/home/vicliu/Music/track.flac"
+lofibox queue add --id 42
+lofibox queue remove 3
+lofibox queue move 5 2
+lofibox queue set 1
+lofibox queue clear
+lofibox queue save evening
+lofibox queue load evening</code></pre>
+
+        <h2>本地媒体库与搜索</h2>
+        <p>
+          library 命令操作本地索引；search 是跨本地和远程源的统一搜索入口。不要把二者混成一个巨大命令。
+        </p>
+        <pre><code>lofibox library scan --root ~/Music --incremental
+lofibox library status --json
+lofibox library list tracks
+lofibox library list albums
+lofibox library query tracks --artist "Outkast"
+lofibox library query tracks --recently-added
+lofibox search "hey ya"
+lofibox search "utada" --local
+lofibox search "radiohead" --source jellyfin-home</code></pre>
+        <figure class="figure">
+          <img src="../../assets/images/cli/06-library-list-tracks.png" alt="lofibox library list tracks 输出">
+          <figcaption>library list tracks：CJK 字体显示完整，日文和中文曲目信息不会变成方框。</figcaption>
+        </figure>
+
+        <h2>source 与 remote</h2>
+        <p>
+          <code>source</code> 负责配置、认证、能力、生命周期；
+          <code>remote</code> 负责连接后的目录浏览、搜索、最近项目、收藏、stream resolve。
+        </p>
+        <pre><code>lofibox source list --json
+lofibox source add jellyfin --id home --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home
+lofibox source probe home
+lofibox source capabilities home
+lofibox remote browse home /albums
+lofibox remote search home "radiohead"
+lofibox remote resolve home item-123
+lofibox remote stream-info home item-123</code></pre>
+        <figure class="figure">
+          <img src="../../assets/images/cli/04-source-list.png" alt="lofibox source list 输出">
+          <figcaption>source list：显示 profile 与 redacted 信息，不输出明文 secret。</figcaption>
+        </figure>
+
+        <h2>凭据</h2>
+        <p>
+          凭据和 profile 分开存储。默认不要把 password/token 放在命令行参数里，推荐 stdin 形式。
+        </p>
+        <pre><code>lofibox credentials list
+lofibox credentials show-ref jellyfin-home
+lofibox credentials set jellyfin-home --username vicliu
+printf '%s' "$JELLYFIN_PASSWORD" | lofibox credentials set jellyfin-home --password-stdin
+printf '%s' "$NAVIDROME_TOKEN" | lofibox credentials set navidrome-home --token-stdin
+lofibox credentials validate jellyfin-home
+lofibox credentials delete old-ref</code></pre>
+
+        <h2>EQ / DSP</h2>
+        <pre><code>lofibox eq show
+lofibox eq enable
+lofibox eq preset list
+lofibox eq preset apply "Bass Boost"
+lofibox eq band 31 +3
+lofibox eq preamp -4.5
+lofibox eq replaygain track
+lofibox eq limiter on
+lofibox eq loudness on
+lofibox eq balance -10
+lofibox eq bind device default "Podcast / Speech"</code></pre>
+
+        <h2>metadata / lyrics / artwork / fingerprint</h2>
+        <p>
+          补 ID3、补歌词、补封面和生成指纹都拆成 lookup、diff、apply、writeback。
+          这样可以先看候选和差异，再决定是否接受和写回，避免自动流程破坏用户音乐文件。
+        </p>
+        <pre><code>lofibox metadata lookup "/music/track.mp3"
+lofibox metadata diff "/music/track.mp3"
+lofibox metadata apply "/music/track.mp3"
+lofibox metadata writeback "/music/track.mp3"
+lofibox lyrics lookup "/music/track.mp3"
+lofibox lyrics apply "/music/track.mp3"
+lofibox lyrics writeback "/music/track.mp3"
+lofibox artwork lookup "/music/track.mp3"
+lofibox fingerprint generate "/music/track.mp3"
+lofibox fingerprint match "/music/track.mp3"</code></pre>
+
+        <h2>cache / persistence / diagnostics</h2>
+        <pre><code>lofibox cache status
+lofibox cache list
+lofibox cache purge artwork
+lofibox cache gc
+lofibox persistence status
+lofibox persistence save
+lofibox persistence repair
+lofibox paths --json
+lofibox doctor --json</code></pre>
+
+        <div class="notice">
+          <strong>Agent 规则：</strong>
+          读取状态优先使用 <code>--json</code> 和 <code>--fields</code>；写入 secret 使用 stdin；
+          对会修改状态的命令，先读取 command schema 中的 <code>mutates</code> 和 <code>requires_runtime</code>。
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox CLI guide.</span>
+        <span><a href="remote-sources.html">下一篇：远程媒体库</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

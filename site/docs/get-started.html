@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Get Started | LoFiBox Zero</title>
+    <meta name="description" content="Install LoFiBox Zero and run it for the first time.">
+    <link rel="alternate" hreflang="en" href="get-started.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/get-started.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html" aria-current="page">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="get-started.html" aria-current="true">EN</a>
+            <a href="../zh/docs/get-started.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html" aria-current="page">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Get Started</p>
+        <h1>Install and Run LoFiBox</h1>
+        <p>
+          LoFiBox Zero is a Linux-first project. The current third-party APT repository is used for installation and testing
+          before LoFiBox enters Debian's official repositories, with Debian trixie / amd64 as the most common target.
+        </p>
+
+        <h2>1. Add the Preview APT Repository</h2>
+        <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF
+
+sudo apt update
+sudo apt install lofibox</code></pre>
+
+        <h2>2. Check the Environment</h2>
+        <p>
+          After installation, run doctor first. It checks XDG paths, media roots, playback backend, helpers, cache, credential store,
+          and other baseline runtime requirements.
+        </p>
+        <pre><code>lofibox version
+lofibox doctor
+lofibox doctor --json</code></pre>
+
+        <figure class="figure">
+          <img src="../assets/images/cli/03-doctor-json.png" alt="lofibox doctor --json output">
+          <figcaption>Doctor JSON output is suitable for automated tests, post-install smoke tests, and Agent diagnostics.</figcaption>
+        </figure>
+
+        <h2>3. Start an Interface</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Entry</th>
+                <th>Command</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GUI / X11</td>
+                <td><code>lofibox</code></td>
+                <td>Starts the graphical interface on a Linux desktop or device display.</td>
+              </tr>
+              <tr>
+                <td>TUI</td>
+                <td><code>lofibox tui</code> or <code>lofibox-tui</code></td>
+                <td>Starts the terminal Dashboard for SSH, servers, and developer workflows.</td>
+              </tr>
+              <tr>
+                <td>CLI</td>
+                <td><code>lofibox now --json</code></td>
+                <td>Reads runtime state without entering an interactive interface.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>4. Scan a Library and Play Music</h2>
+        <p>Configure a media root, scan it, search, then play directly or add tracks to the queue.</p>
+        <pre><code>lofibox config set media.roots '["/home/vicliu/Music"]'
+lofibox library scan --incremental
+lofibox library status
+lofibox search "Outkast"
+lofibox play "/home/vicliu/Music/Outkast - Hey Ya!.mp3"
+lofibox now --json</code></pre>
+
+        <h2>5. Minimal Remote Source Flow</h2>
+        <p>
+          Remote libraries are split into source profiles, credentials, remote browsing, and stream resolution.
+          Do not pass secrets as command-line arguments by default; use stdin so secrets do not land in shell history or process lists.
+        </p>
+        <pre><code>lofibox credentials set jellyfin-home --password-stdin
+lofibox source add jellyfin \
+  --id jellyfin-home \
+  --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home
+
+lofibox source probe jellyfin-home
+lofibox remote browse jellyfin-home /albums
+lofibox remote search jellyfin-home "radiohead"</code></pre>
+
+        <div class="notice">
+          <strong>Closing an interface does not stop playback.</strong>
+          GUI and TUI are projections of runtime state. Playback lives in the runtime, so closing an interface should not interrupt playback unless you send a stop command.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>Get started with LoFiBox Zero.</span>
+        <span><a href="../index.html">Official site</a> · <a href="cli.html">CLI docs</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

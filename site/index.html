@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LoFiBox Zero | Linux-first Music Player</title>
+    <meta
+      name="description"
+      content="The official LoFiBox Zero portal: a Linux-first music player for small screens, desktops, terminals, remote media libraries, and automation workflows."
+    >
+    <link rel="alternate" hreflang="en" href="index.html">
+    <link rel="alternate" hreflang="zh-Hans" href="zh/index.html">
+    <link rel="stylesheet" href="assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="index.html" aria-current="page">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="#install">Install</a>
+          <a href="docs/get-started.html">Get Started</a>
+          <a href="docs/gui.html">GUI</a>
+          <a href="docs/tui.html">TUI</a>
+          <a href="docs/cli.html">CLI</a>
+          <a href="docs/remote-sources.html">Remote Sources</a>
+          <a href="https://github.com/vicliu624/LoFiBox-Zero">GitHub</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="index.html" aria-current="true">EN</a>
+            <a href="zh/index.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="wrap hero">
+        <div>
+          <p class="eyebrow">Linux-first music player</p>
+          <h1>LoFiBox Zero</h1>
+          <p class="lead">
+            A music player for Cardputer Zero, Raspberry Pi, Linux desktops, SSH terminals, and remote media libraries.
+            GUI, TUI, CLI, and future Agent interfaces all sit on the same runtime.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#install">Install Preview</a>
+            <a class="button" href="docs/index.html">Read Docs</a>
+            <a class="button" href="docs/packaging.html">APT Repository</a>
+          </div>
+        </div>
+
+        <div class="screenshot-stack" aria-label="Product interface previews">
+          <figure class="shot">
+            <img src="assets/images/gui/06-now-playing.png" alt="LoFiBox GUI Now Playing interface">
+            <figcaption>320x170 GUI: Now Playing, spectrum, lyrics, and playback state.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/tui/01-dashboard-unicode.png" alt="LoFiBox TUI Dashboard interface">
+            <figcaption>Native terminal TUI: Dashboard, Lyrics, Spectrum, and Queue.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <section id="install">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Preview APT Repository</p>
+              <h2>Install from the preview repository before Debian official packaging lands</h2>
+            </div>
+            <p>
+              GitHub Pages carries two separate surfaces: the root directory is the public website,
+              while <code>/debian</code> is the machine-readable APT repository. Keeping them separate protects the install path from website content.
+            </p>
+          </div>
+
+          <div class="install-box">
+            <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF
+
+sudo apt update
+sudo apt install lofibox</code></pre>
+
+            <div class="notice">
+              <strong>This is a preview repository.</strong>
+              It is intended for user installs and testing before LoFiBox enters Debian's official repositories.
+              Versions may include a <code>~lofibox&lt;run&gt;</code> suffix; after the stable Debian flow is ready, this repository remains a preview channel.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Interfaces</p>
+              <h2>Three first-class entry points</h2>
+            </div>
+            <p>
+              GUI serves small screens and desktop windows, TUI serves native terminal control, and CLI serves one-shot commands,
+              scripts, systemd, tests, and Agents. They share one runtime.
+            </p>
+          </div>
+
+          <div class="grid">
+            <article class="card">
+              <h3>GUI</h3>
+              <p>Designed for 320x170 screens, X11 desktop windows, and device front panels. Covers the main menu, library, search, Now Playing, lyrics, and EQ.</p>
+              <div class="tag-list">
+                <span class="tag">Framebuffer</span>
+                <span class="tag">X11</span>
+                <span class="tag">Low-resolution devices</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>TUI</h3>
+              <p>A terminal console for Now Playing, Lyrics, Spectrum, Queue, and EQ. Built for SSH, servers, and developer workflows.</p>
+              <div class="tag-list">
+                <span class="tag">ANSI</span>
+                <span class="tag">Unicode / ASCII</span>
+                <span class="tag">Headless systems</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>CLI</h3>
+              <p>A command surface for people and machines. Human-readable by default, with <code>--json</code> and <code>--porcelain</code> for scripts and Agents.</p>
+              <div class="tag-list">
+                <span class="tag">Stable exit codes</span>
+                <span class="tag">Structured output</span>
+                <span class="tag">Agent-friendly</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Core Domains</p>
+              <h2>Player capabilities</h2>
+            </div>
+            <p>
+              LoFiBox is a local-file player that brings the local media library, remote sources, metadata governance,
+              lyrics, artwork, fingerprints, cache, and EQ into one product object model.
+            </p>
+          </div>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>Local Library and Search</h3>
+              <p>
+                Scan media roots, inspect index status, query tracks, albums, artists, and genres, search consistently, and manage queues.
+                CLI and GUI search use the same media item semantics.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Remote Media Sources</h3>
+              <p>
+                Remote media is split into a <code>source</code> configuration layer and a <code>remote</code> browsing/resolution layer.
+                Supported targets include Jellyfin, Emby, Navidrome/OpenSubsonic, Direct URL, Internet Radio, Playlist Manifest,
+                HLS/DASH, SMB/NFS/WebDAV/FTP/SFTP, and DLNA/UPnP.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Metadata, Lyrics, Artwork, Fingerprints</h3>
+              <p>
+                LoFiBox separates lookup, diff, apply, cache, writeback, and fingerprint indexing so auto-completion never silently becomes file mutation.
+              </p>
+            </article>
+            <article class="card">
+              <h3>EQ / DSP</h3>
+              <p>
+                Supports 10-band graphic EQ, presets, preamp, ReplayGain, loudness, limiter, balance, HPF/LPF,
+                and bindings by device, content, or source.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Screens</p>
+              <h2>Interface previews</h2>
+            </div>
+            <p>GUI, TUI, and CLI share one runtime, so desktop windows, terminal consoles, and script output agree on playback state and library meaning.</p>
+          </div>
+
+          <div class="grid two">
+            <figure class="figure">
+              <img src="assets/images/gui/04-search.png" alt="LoFiBox GUI search window">
+              <figcaption>GUI Search: one entry point across local and remote sources.</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="assets/images/gui/11-lyrics-hey-ya.png" alt="LoFiBox GUI lyrics view">
+              <figcaption>GUI Lyrics: synchronized lyrics and current-line highlighting.</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="assets/images/tui/02-lyrics-unicode.png" alt="LoFiBox TUI lyrics view">
+              <figcaption>TUI Lyrics: a terminal projection for scrolling lyrics.</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="assets/images/cli/10-now-json.png" alt="LoFiBox CLI JSON status output">
+              <figcaption>CLI JSON: status output for scripts, tests, and Agents.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Zero official portal and preview APT repository.</span>
+        <span><a href="docs/packaging.html">APT Repository</a> · <a href="docs/index.html">Docs</a> · <a href="https://github.com/vicliu624/LoFiBox-Zero">Source</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

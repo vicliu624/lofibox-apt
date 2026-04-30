@@ -1,0 +1,136 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>APT 源与发布 | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero GitHub Pages APT 源说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/packaging.html">
+    <link rel="alternate" hreflang="zh-Hans" href="packaging.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html" aria-current="page">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/packaging.html">EN</a>
+            <a href="packaging.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html" aria-current="page">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Packaging</p>
+        <h1>GitHub Pages APT 源</h1>
+        <p>
+          这个仓库同时发布官网和预览 APT 源。官网是给人阅读的门户；APT repo 是给 <code>apt</code> 解析的机器目录。
+          当前机器目录保持在 <code>/debian</code>，以兼容已经发布的 <code>lofibox.sources</code> 示例。
+        </p>
+
+        <h2>目录结构</h2>
+        <pre><code>public/
+  index.html
+  assets/
+  docs/
+  .nojekyll
+  lofibox-archive-keyring.pgp
+  debian/
+    dists/trixie/...
+    pool/...</code></pre>
+
+        <h2>用户安装入口</h2>
+        <pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://vicliu624.github.io/lofibox-apt/lofibox-archive-keyring.pgp \
+  | sudo tee /etc/apt/keyrings/lofibox-archive-keyring.pgp >/dev/null
+
+sudo tee /etc/apt/sources.list.d/lofibox.sources >/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://vicliu624.github.io/lofibox-apt/debian
+Suites: trixie
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
+EOF</code></pre>
+
+        <h2>发布流程</h2>
+        <p>
+          GitHub Actions workflow 会 checkout <code>lofibox-apt</code> 和 <code>LoFiBox-Zero</code>，构建 Debian 包，
+          使用 GPG key 生成 signed APT repo，然后把 <code>site/</code> 静态官网复制到同一个 Pages artifact 根目录，
+          校验官网与 APT 源边界，然后部署 GitHub Pages。
+        </p>
+        <ol>
+          <li>手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>
+          <li>选择 <code>source_ref</code>，通常是 LoFiBox-Zero 的 main 或 release tag。</li>
+          <li>选择 suite，当前默认 <code>trixie</code>。</li>
+          <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;</code> 后缀。</li>
+          <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
+        </ol>
+
+        <h2>仓库设置</h2>
+        <p>
+          在 GitHub 仓库设置中，把 Pages source 设为 <strong>GitHub Actions</strong>，并添加下面的 Actions secrets。
+          发布 workflow 是手动触发的，这样每次预览包都明确来自指定的 LoFiBox-Zero ref。
+        </p>
+
+        <h2>Secrets</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Secret</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>导入用于 APT repository signing 的私钥。</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>传给 aptly / gpg 选择签名 key。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>本地预览官网</h2>
+        <pre><code>cd lofibox-apt
+python3 -m http.server --directory site 8080
+# open the local preview in a browser</code></pre>
+
+        <h2>本地模拟 Pages artifact</h2>
+        <pre><code>scripts/stage-pages-site.sh --site site --output public
+python3 -m http.server --directory public 8080</code></pre>
+
+        <div class="notice">
+          <strong>边界约束：</strong>
+          不要把 HTML 页面放进 <code>public/debian</code>，也不要把 Debian pool 移到官网资源目录。
+          官网可以链接 APT key 和 deb822 示例，但不能改变 apt 客户端依赖的目录结构。
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>APT repository and Pages publishing.</span>
+        <span><a href="../index.html">官网首页</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

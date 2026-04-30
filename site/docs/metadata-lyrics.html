@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Metadata and Lyrics | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero metadata, lyrics, artwork, and fingerprint guide.">
+    <link rel="alternate" hreflang="en" href="metadata-lyrics.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/metadata-lyrics.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="metadata-lyrics.html" aria-current="true">EN</a>
+            <a href="../zh/docs/metadata-lyrics.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html" aria-current="page">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Metadata Governance</p>
+        <h1>Metadata, Lyrics, Artwork, Fingerprints</h1>
+        <p>
+          Automatic completion is a core player capability, but it needs governance boundaries. LoFiBox separates identity, lookup,
+          candidate selection, acceptance, cache, and writeback so "found a result" never silently becomes "modified the music file."
+        </p>
+
+        <h2>Recommended Workflow</h2>
+        <ol>
+          <li>Read current embedded, local, and remote metadata first.</li>
+          <li>Generate a fingerprint or use filename, path, and remote server id to build candidates.</li>
+          <li>Run lookup against MusicBrainz, remote services, lyrics providers, and artwork providers.</li>
+          <li>Show a diff between current values and candidate values.</li>
+          <li>Apply only to the LoFiBox cache / library projection.</li>
+          <li>Write back to ID3/FLAC/Vorbis tags only after explicit user confirmation.</li>
+        </ol>
+
+        <h2>Metadata</h2>
+        <p>
+          Metadata commands cover title, artist, album, album_artist, track number, disc, year, genre, composer, MusicBrainz ids, and related fields.
+          When a remote library lacks embedded tags, LoFiBox should prefer remote server items, filenames, and fingerprint candidates for the projection.
+        </p>
+        <pre><code>lofibox metadata show "/music/track.mp3"
+lofibox metadata lookup "/music/track.mp3"
+lofibox metadata diff "/music/track.mp3"
+lofibox metadata apply "/music/track.mp3"
+lofibox metadata writeback "/music/track.mp3"
+lofibox metadata cache show 42
+lofibox metadata cache purge 42</code></pre>
+
+        <h2>Lyrics</h2>
+        <p>
+          Lyrics commands distinguish embedded lyrics, sidecar .lrc files, online providers, and user-edited text.
+          Synchronized lyrics should preserve timestamps; lyrics without timestamps should still render as plain lyrics.
+        </p>
+        <pre><code>lofibox lyrics show 42
+lofibox lyrics lookup 42
+lofibox lyrics apply 42
+lofibox lyrics edit 42
+lofibox lyrics writeback 42
+lofibox now --fields lyrics.available,lyrics.current_index,lyrics.status_message --json</code></pre>
+        <figure class="figure">
+          <img src="../assets/images/gui/11-lyrics-hey-ya.png" alt="LoFiBox GUI Lyrics">
+          <figcaption>Lyrics projection: GUI and TUI should both render the current line from the runtime lyrics snapshot.</figcaption>
+        </figure>
+
+        <h2>Artwork</h2>
+        <p>
+          Artwork commands view, find, apply, and export cover art. Export does not modify media files; writeback-like actions must stay under metadata governance.
+        </p>
+        <pre><code>lofibox artwork show 42
+lofibox artwork lookup 42
+lofibox artwork apply 42
+lofibox artwork export 42 --output cover.jpg</code></pre>
+
+        <h2>Fingerprint</h2>
+        <p>
+          Fingerprints support same-recording judgment, deduplication, local/remote matching, and metadata candidate ranking.
+          They are not the only condition for lyrics matching, but they reduce mismatches when filenames are messy.
+        </p>
+        <pre><code>lofibox fingerprint show 42
+lofibox fingerprint generate "/music/track.mp3"
+lofibox fingerprint match "/music/track.mp3"
+lofibox fingerprint index status
+lofibox fingerprint index rebuild</code></pre>
+
+        <h2>Troubleshooting Display Failures</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Symptom</th><th>Check first</th><th>Command</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ID3 was not completed</td>
+                <td>Whether the library projection has candidates, lookup failed, fingerprint was generated, and cache was written.</td>
+                <td><code>lofibox metadata lookup &lt;path&gt; --json</code></td>
+              </tr>
+              <tr>
+                <td>Remote artist/title is UNKNOWN</td>
+                <td>Whether remote resolve includes server metadata and the source capability supports catalog metadata.</td>
+                <td><code>lofibox remote stream-info &lt;profile&gt; &lt;item&gt; --json</code></td>
+              </tr>
+              <tr>
+                <td>Lyrics were found but do not display</td>
+                <td>Whether the lyrics snapshot is available, the current track id matches, and offset/current_index is updating.</td>
+                <td><code>lofibox now --fields lyrics,playback.current_track_id --json</code></td>
+              </tr>
+              <tr>
+                <td>No lyrics candidates</td>
+                <td>Whether title/artist are empty, providers are enabled, or network policy disables online lookup.</td>
+                <td><code>lofibox lyrics lookup &lt;id-or-path&gt; --json</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notice">
+          <strong>Writeback principle:</strong>
+          apply may update LoFiBox cache/projection; writeback is the action that attempts to modify media file tags.
+          Remote libraries are usually not writable, so completion results should be stored in local metadata cache.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>Metadata and lyrics guide.</span>
+        <span><a href="packaging.html">Next: APT Repository and Publishing</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

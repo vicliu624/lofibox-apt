@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remote Sources | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero remote media source guide.">
+    <link rel="alternate" hreflang="en" href="remote-sources.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/remote-sources.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html" aria-current="page">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="remote-sources.html" aria-current="true">EN</a>
+            <a href="../zh/docs/remote-sources.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html" aria-current="page">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Remote Sources</p>
+        <h1>Remote Media Sources</h1>
+        <p>
+          LoFiBox keeps a clear source / remote boundary:
+          source owns configuration, authentication, capabilities, and lifecycle; remote owns browsing, search, recent items, favorites, and stream resolution.
+        </p>
+
+        <h2>Supported Source Types</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Category</th><th>Source types</th><th>Use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Media servers</td><td>Jellyfin, Emby, OpenSubsonic / Navidrome, Subsonic</td><td>Directories, search, recent playback, favorites, stream resolution.</td></tr>
+              <tr><td>Direct streams</td><td>Direct URL, Internet Radio, Playlist Manifest</td><td>Radio, single URLs, M3U/PLS-style playlists.</td></tr>
+              <tr><td>Streaming protocols</td><td>HLS, DASH</td><td>Adaptive streams, live audio, remote audio segments.</td></tr>
+              <tr><td>File sharing</td><td>SMB, NFS, WebDAV, FTP, SFTP</td><td>Remote file trees as media sources.</td></tr>
+              <tr><td>LAN discovery</td><td>DLNA / UPnP</td><td>Home-network media device browsing and playback.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Configure a Source Profile</h2>
+        <p>
+          Profiles store non-secret configuration such as kind, id, name, base_url, username, credential_ref, and TLS policy.
+          Secrets must live in the credential store.
+        </p>
+        <pre><code>printf '%s' "$JELLYFIN_PASSWORD" | lofibox credentials set jellyfin-home --password-stdin
+
+lofibox source add jellyfin \
+  --id jellyfin-home \
+  --name "Home Jellyfin" \
+  --base-url https://media.local:8096 \
+  --username vicliu \
+  --credential-ref jellyfin-home \
+  --verify-peer true \
+  --allow-self-signed false</code></pre>
+
+        <h2>Check Connection and Capabilities</h2>
+        <p>
+          After adding a profile, probe it first. auth-status and capabilities are useful for scripts that need to decide whether a source is usable
+          and which directory or stream features it supports.
+        </p>
+        <pre><code>lofibox source list --json
+lofibox source show jellyfin-home --json
+lofibox source probe jellyfin-home
+lofibox source auth-status jellyfin-home --json
+lofibox source capabilities jellyfin-home --json</code></pre>
+
+        <figure class="figure">
+          <img src="../assets/images/cli/04-source-list.png" alt="lofibox source list output">
+          <figcaption>source list: profiles may display credential_ref, but never the secret.</figcaption>
+        </figure>
+
+        <h2>Browse and Search Remote Content</h2>
+        <p>
+          Remote commands are used only after a profile can connect. Browsing results and local-library results are converted into the same MediaItem model,
+          so GUI/TUI/CLI can play them consistently.
+        </p>
+        <pre><code>lofibox remote browse jellyfin-home
+lofibox remote browse jellyfin-home /artists
+lofibox remote browse jellyfin-home /albums
+lofibox remote browse jellyfin-home /playlists
+lofibox remote browse jellyfin-home /stations
+lofibox remote recent jellyfin-home
+lofibox remote favorites jellyfin-home
+lofibox remote search jellyfin-home "outkast"</code></pre>
+
+        <h2>Resolve Streams and Play</h2>
+        <p>
+          resolve / stream-info return redacted URLs, codec, bitrate, seekable/live flags, buffer state, and diagnostics.
+          Playback still goes through the playback session; remote commands do not bypass the runtime.
+        </p>
+        <pre><code>lofibox remote resolve jellyfin-home item-123 --json
+lofibox remote stream-info jellyfin-home item-123 --json
+lofibox play --source jellyfin-home --item item-123
+lofibox now --fields playback.status,playback.title,remote.connection_status --json</code></pre>
+
+        <h2>Safety Constraints</h2>
+        <ul>
+          <li>Remote profiles store credential_ref, not raw passwords or tokens.</li>
+          <li>CLI and TUI display only redacted URLs.</li>
+          <li>Authentication failures return explicit exit codes and structured errors for automation repair.</li>
+          <li>Remote streams enter the unified playback pipeline, keeping EQ, lyrics projection, and runtime diagnostics consistent with local playback.</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>Remote source guide.</span>
+        <span><a href="metadata-lyrics.html">Next: Metadata and Lyrics</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

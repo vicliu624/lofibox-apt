@@ -2,22 +2,109 @@
 
 这个流程用于本机检查，不会上传 GitHub Pages。
 
+发布物分成三层：
+
+- `site/`：官网源码，提交到 git。
+- `public/`：一次性 Pages artifact，不提交到 git。
+- `public/debian/`：APT 机器接口，不允许混入 HTML。
+
+## 构建 Debian 包
+
 ```sh
 git clone https://github.com/vicliu624/LoFiBox-Zero.git
 cd LoFiBox-Zero
+chmod +x debian/rules debian/tests/smoke
 dpkg-buildpackage -us -uc -b
+```
 
+生成的 `.changes` 文件会在 `LoFiBox-Zero` 上级目录。
+
+## 生成完整 Pages artifact
+
+```sh
 gpg --import /path/to/private.asc
 
-scripts/build-github-pages-apt-repository.sh \
+lofibox-apt/scripts/build-public-artifact.sh \
+  --site lofibox-apt/site \
+  --lofibox-zero LoFiBox-Zero \
   --suite trixie \
   --component main \
-  --output ../lofibox-apt/public \
+  --output lofibox-apt/public \
   --repo-name lofibox-preview \
   --origin LoFiBox \
   --label "LoFiBox Preview" \
   --gpg-key "$LOFIBOX_APT_GPG_KEY_ID" \
-  --changes ../lofibox_0.1.0-1~lofibox1_amd64.changes
+  --changes ./lofibox_0.1.0-1~lofibox1_amd64.changes
 ```
 
-生成结果在 `public/`。用任意静态文件服务器暴露 `public/` 后，即可用 deb822 `.sources` 文件测试安装。
+这个命令会先调用 LoFiBox-Zero 的 APT repo builder，再复制官网，并校验最终 artifact。
+
+最终结构应包含：
+
+```text
+public/
+  index.html
+  assets/
+  docs/
+  lofibox-archive-keyring.pgp
+  debian/
+    dists/trixie/...
+    pool/...
+```
+
+## 只预览官网
+
+如果只想检查官网，不生成 APT repo：
+
+```sh
+lofibox-apt/scripts/stage-pages-site.sh \
+  --site lofibox-apt/site \
+  --output lofibox-apt/public
+
+python3 -m http.server --directory lofibox-apt/public 8080
+```
+
+如果已经有 APT repo，并希望强制校验它：
+
+```sh
+lofibox-apt/scripts/stage-pages-site.sh \
+  --site lofibox-apt/site \
+  --output lofibox-apt/public \
+  --require-apt
+```
+
+## 本地测试
+
+```sh
+python3 -m http.server --directory lofibox-apt/public 8080
+```
+
+然后临时把 deb822 source 的 `URIs:` 指向本地服务，例如：
+
+```text
+URIs: http://127.0.0.1:8080/debian
+```
+
+注意：本地 HTTP 测试只用于验证路径和索引，不代表最终 GitHub Pages 部署已经成功。
+
+## GitHub Pages 发布
+
+远端仓库使用：
+
+```text
+git@github.com:vicliu624/lofibox-apt.git
+```
+
+GitHub 仓库设置中需要：
+
+- Pages source 选择 `GitHub Actions`。
+- Actions secrets 增加 `LOFIBOX_APT_GPG_PRIVATE_KEY`。
+- Actions secrets 增加 `LOFIBOX_APT_GPG_KEY_ID`。
+
+发布时手动触发 `Publish LoFiBox APT Repository` workflow，输入：
+
+```text
+source_ref: main
+suite: trixie
+preview_suffix: auto
+```

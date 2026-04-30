@@ -1,0 +1,125 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>文档 | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 中文文档入口。">
+    <link rel="alternate" hreflang="en" href="../../docs/index.html">
+    <link rel="alternate" hreflang="zh-Hans" href="index.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/index.html">EN</a>
+            <a href="index.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html" aria-current="page">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Documentation</p>
+        <h1>LoFiBox Zero 文档</h1>
+        <p>
+          这份官网文档是给普通用户、发行测试者和自动化使用者读的入口。这份文档会把产品边界、安装路径和主要命令讲清楚。
+        </p>
+
+        <div class="grid two">
+          <article class="card">
+            <h3><a href="get-started.html">Get Started</a></h3>
+            <p>安装预览版、第一次运行、扫描媒体库、播放音乐、诊断环境。</p>
+          </article>
+          <article class="card">
+            <h3><a href="gui.html">GUI</a></h3>
+            <p>小屏图形界面的菜单、媒体库、搜索、Now Playing、歌词和 EQ。</p>
+          </article>
+          <article class="card">
+            <h3><a href="tui.html">TUI</a></h3>
+            <p>终端 Dashboard、Lyrics、Spectrum、Queue、EQ，以及字符集和主题。</p>
+          </article>
+          <article class="card">
+            <h3><a href="cli.html">CLI</a></h3>
+            <p>人类命令、机器输出、runtime 命令、source/remote、metadata/lyrics、稳定退出码。</p>
+          </article>
+          <article class="card">
+            <h3><a href="remote-sources.html">远程媒体库</a></h3>
+            <p>支持哪些远程源，如何配置 profile、探测能力、浏览目录、解析流。</p>
+          </article>
+          <article class="card">
+            <h3><a href="metadata-lyrics.html">元数据与歌词</a></h3>
+            <p>ID3/metadata、lyrics、artwork、fingerprint 的补齐、缓存、写回边界。</p>
+          </article>
+        </div>
+
+        <h2>产品边界</h2>
+        <p>
+          LoFiBox Zero 的核心原则是：事实层、runtime 投影层、GUI/TUI/CLI 展示层必须分开。
+          播放状态、队列、EQ、远程连接、歌词和媒体库事实属于 runtime 与 core；
+          GUI/TUI/CLI 只读取投影并提交受控命令。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>入口</th>
+                <th>定位</th>
+                <th>适合场景</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GUI</td>
+                <td>低分辨率图形产品界面</td>
+                <td>Cardputer Zero、Raspberry Pi 小屏、Linux 桌面窗口</td>
+              </tr>
+              <tr>
+                <td>TUI</td>
+                <td>终端原生产品界面</td>
+                <td>SSH、服务器、无桌面环境、开发者和创作者终端</td>
+              </tr>
+              <tr>
+                <td>CLI</td>
+                <td>一次性命令与机器接口</td>
+                <td>脚本、systemd、测试、MCP/Agent、故障诊断</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Zero documentation.</span>
+        <span><a href="../index.html">官网首页</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

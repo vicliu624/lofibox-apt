@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Docs | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero documentation index.">
+    <link rel="alternate" hreflang="en" href="index.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/index.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="index.html" aria-current="true">EN</a>
+            <a href="../zh/docs/index.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html" aria-current="page">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Documentation</p>
+        <h1>LoFiBox Zero Docs</h1>
+        <p>
+          This documentation is the public entry point for users, release testers, and automation workflows.
+          It explains the product boundaries, install path, and major command surfaces.
+        </p>
+
+        <div class="grid two">
+          <article class="card">
+            <h3><a href="get-started.html">Get Started</a></h3>
+            <p>Install the preview build, run LoFiBox for the first time, scan a media library, play music, and diagnose the environment.</p>
+          </article>
+          <article class="card">
+            <h3><a href="gui.html">GUI</a></h3>
+            <p>Small-screen graphical menus, library browsing, search, Now Playing, lyrics, and EQ.</p>
+          </article>
+          <article class="card">
+            <h3><a href="tui.html">TUI</a></h3>
+            <p>Terminal Dashboard, Lyrics, Spectrum, Queue, EQ, character sets, and themes.</p>
+          </article>
+          <article class="card">
+            <h3><a href="cli.html">CLI</a></h3>
+            <p>Human commands, machine output, runtime commands, source/remote, metadata/lyrics, and stable exit codes.</p>
+          </article>
+          <article class="card">
+            <h3><a href="remote-sources.html">Remote Sources</a></h3>
+            <p>Supported remote source types, profile configuration, capability probing, directory browsing, and stream resolution.</p>
+          </article>
+          <article class="card">
+            <h3><a href="metadata-lyrics.html">Metadata and Lyrics</a></h3>
+            <p>ID3/metadata, lyrics, artwork, and fingerprint lookup, cache, acceptance, and writeback boundaries.</p>
+          </article>
+        </div>
+
+        <h2>Product Boundaries</h2>
+        <p>
+          LoFiBox Zero follows one core rule: the fact layer, runtime projection layer, and GUI/TUI/CLI presentation layers stay separate.
+          Playback state, queue, EQ, remote connections, lyrics, and library facts belong to the runtime and core domains;
+          GUI/TUI/CLI read projections and submit controlled commands.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Entry</th>
+                <th>Role</th>
+                <th>Best for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GUI</td>
+                <td>Low-resolution graphical product interface</td>
+                <td>Cardputer Zero, Raspberry Pi small screens, Linux desktop windows</td>
+              </tr>
+              <tr>
+                <td>TUI</td>
+                <td>Native terminal product interface</td>
+                <td>SSH, servers, headless systems, developer and creator terminals</td>
+              </tr>
+              <tr>
+                <td>CLI</td>
+                <td>One-shot commands and machine interface</td>
+                <td>Scripts, systemd, tests, MCP/Agents, diagnostics</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Zero documentation.</span>
+        <span><a href="../index.html">Official site</a></span>
+      </div>
+    </footer>
+  </body>
+</html>
