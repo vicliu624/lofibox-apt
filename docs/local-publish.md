@@ -123,3 +123,24 @@ source_ref: main
 suite: trixie
 preview_suffix: auto
 ```
+## Cross-Build Boundary
+
+The GitHub publisher builds three package architectures:
+
+- `amd64`, built natively and validated with lintian and autopkgtest.
+- `arm64`, cross-built for Raspberry Pi CM4/CM5 class 64-bit systems.
+- `armhf`, cross-built for Raspberry Pi CM0 / ARMv6 hard-float systems.
+
+Cross builds are package-construction jobs, not runtime execution jobs. They use
+`DEB_BUILD_OPTIONS=nocheck` because the GitHub runner is x86_64 and must not try
+to execute target architecture test binaries. Runtime smoke coverage stays on
+the native package job and device validation stays on real hardware.
+
+The Raspberry Pi CM0 package is built with ARM mode and ARM1176JZF-S/VFP flags:
+
+```text
+-marm -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard
+```
+
+Do not replace this with plain `-march=armv6` in the publisher. GCC may select
+Thumb-1 for compiler probes, and Thumb-1 cannot use the hard-float VFP ABI.

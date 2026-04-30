@@ -210,6 +210,9 @@ jobs:
       - name: Build arm64 package
         run: |
           chmod +x debian/rules debian/tests/smoke
+          export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
+          export CC=aarch64-linux-gnu-gcc
+          export CXX=aarch64-linux-gnu-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
           dpkg-buildpackage --host-arch=arm64 -us -uc -b
 
@@ -335,8 +338,11 @@ jobs:
       - name: Build Raspberry Pi ARMv6 armhf package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          export DEB_CFLAGS_APPEND="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
+          export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
+          export DEB_CFLAGS_APPEND="-marm -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
           export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
+          export CC=arm-linux-gnueabihf-gcc
+          export CXX=arm-linux-gnueabihf-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
           dpkg-buildpackage --host-arch=armhf -us -uc -b
 
