@@ -104,15 +104,19 @@ jobs:
           git clean -fdX
           sudo autopkgtest "$LOFIBOX_CHANGES" "$GITHUB_WORKSPACE" -- null
 
+      - name: Stage Debian package artifact
+        run: |
+          mkdir -p package-artifacts
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_${{ matrix.deb_arch }}.changes package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_${{ matrix.deb_arch }}.deb package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_${{ matrix.deb_arch }}.buildinfo package-artifacts/
+
       - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-package-${{ matrix.deb_arch }}
           if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.changes
-            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
-            ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
+          path: package-artifacts/*
 
   build-arm64-package:
     name: Build Debian package (arm64)
@@ -129,6 +133,43 @@ jobs:
       - name: Install arm64 cross build tools
         run: |
           sudo dpkg --add-architecture arm64
+          sudo python3 - <<'PY'
+          from pathlib import Path
+
+          for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
+              text = path.read_text(encoding="utf-8")
+              if "URIs:" not in text or "ubuntu" not in text:
+                  continue
+              stanzas = []
+              for stanza in text.strip().split("\n\n"):
+                  lines = stanza.splitlines()
+                  if any(line.startswith("Architectures:") for line in lines):
+                      stanzas.append(stanza)
+                      continue
+                  out = []
+                  for line in lines:
+                      out.append(line)
+                      if line.startswith("Types:"):
+                          out.append("Architectures: amd64")
+                  stanzas.append("\n".join(out))
+              path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
+          PY
+          cat >/tmp/ubuntu-ports.sources <<'EOF'
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: noble noble-updates noble-backports
+          Components: main universe
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: noble-security
+          Components: main universe
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo mv /tmp/ubuntu-ports.sources /etc/apt/sources.list.d/ubuntu-ports.sources
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             apt-utils \
@@ -188,15 +229,19 @@ jobs:
           test -n "$deb_file"
           test "$(dpkg-deb -f "$deb_file" Architecture)" = "arm64"
 
+      - name: Stage arm64 artifact
+        run: |
+          mkdir -p package-artifacts
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_arm64.changes package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_arm64.deb package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_arm64.buildinfo package-artifacts/
+
       - name: Upload arm64 artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-package-arm64
           if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/../lofibox_*_arm64.changes
-            ${{ github.workspace }}/../lofibox_*_arm64.deb
-            ${{ github.workspace }}/../lofibox_*_arm64.buildinfo
+          path: package-artifacts/*
 
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
@@ -213,6 +258,43 @@ jobs:
       - name: Install Raspberry Pi ARMv6 cross build tools
         run: |
           sudo dpkg --add-architecture armhf
+          sudo python3 - <<'PY'
+          from pathlib import Path
+
+          for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
+              text = path.read_text(encoding="utf-8")
+              if "URIs:" not in text or "ubuntu" not in text:
+                  continue
+              stanzas = []
+              for stanza in text.strip().split("\n\n"):
+                  lines = stanza.splitlines()
+                  if any(line.startswith("Architectures:") for line in lines):
+                      stanzas.append(stanza)
+                      continue
+                  out = []
+                  for line in lines:
+                      out.append(line)
+                      if line.startswith("Types:"):
+                          out.append("Architectures: amd64")
+                  stanzas.append("\n".join(out))
+              path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
+          PY
+          cat >/tmp/ubuntu-ports.sources <<'EOF'
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: noble noble-updates noble-backports
+          Components: main universe
+          Architectures: armhf
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: noble-security
+          Components: main universe
+          Architectures: armhf
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo mv /tmp/ubuntu-ports.sources /etc/apt/sources.list.d/ubuntu-ports.sources
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             apt-utils \
@@ -278,15 +360,19 @@ jobs:
           arm-linux-gnueabihf-readelf -A "$tmp_dir/usr/bin/lofibox" | tee "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
           grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
 
+      - name: Stage Raspberry Pi armhf artifact
+        run: |
+          mkdir -p package-artifacts
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.changes package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.deb package-artifacts/
+          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.buildinfo package-artifacts/
+
       - name: Upload Raspberry Pi armhf artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-package-armhf
           if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/../lofibox_*_armhf.changes
-            ${{ github.workspace }}/../lofibox_*_armhf.deb
-            ${{ github.workspace }}/../lofibox_*_armhf.buildinfo
+          path: package-artifacts/*
 
   publish-pages:
     name: Publish website and APT repository
