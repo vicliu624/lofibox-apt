@@ -63,6 +63,7 @@ jobs:
             devscripts \
             dpkg-dev \
             gnupg \
+            libdistro-info-perl \
             libfreetype6-dev \
             libx11-dev \
             libxkbcommon-dev \
@@ -142,7 +143,7 @@ jobs:
           else
             suffix="$preview_suffix"
           fi
-          dch --newversion "${current_version}${suffix}" --distribution "$suite" "Preview APT repository build."
+          dch -b --newversion "${current_version}${suffix}" --distribution "$suite" "Preview APT repository build."
           dpkg-parsechangelog -S Version
 
       - name: Build Debian package

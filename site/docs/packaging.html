@@ -89,6 +89,7 @@ EOF</code></pre>
           <li>Select <code>source_ref</code>, usually the LoFiBox-Zero main branch or a release tag.</li>
           <li>Select the suite; the current default is <code>trixie</code>.</li>
           <li>When preview_suffix is <code>auto</code>, the workflow generates a <code>~lofibox&lt;run_number&gt;</code> suffix.</li>
+          <li>The preview suffix deliberately sorts below the future official Debian version, so the workflow uses <code>dch -b</code> when applying it.</li>
           <li>The workflow builds packages, generates the repository, copies the website, validates <code>public/</code>, and deploys Pages.</li>
         </ol>
 

@@ -87,6 +87,7 @@ EOF</code></pre>
           <li>选择 <code>source_ref</code>，通常是 LoFiBox-Zero 的 main 或 release tag。</li>
           <li>选择 suite，当前默认 <code>trixie</code>。</li>
           <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;</code> 后缀。</li>
+          <li>预览后缀会刻意排在未来 Debian 官方版本之前，所以 workflow 使用 <code>dch -b</code> 应用这个版本。</li>
           <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
         </ol>
 

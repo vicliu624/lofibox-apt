@@ -109,6 +109,8 @@ suite: trixie
 preview_suffix: auto
 ```
 
+预览包版本默认使用 `0.1.0-1~lofiboxN` 这类后缀。`~` 让预览源版本低于未来 Debian 官方源的 `0.1.0-1`，所以 workflow 使用 `dch -b` 明确允许这次有意的预览降版本。
+
 也可以手动触发 workflow，并输入：
 
 ```text
