@@ -86,7 +86,7 @@ jobs:
       - name: Build Debian package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          dpkg-buildpackage -us -uc -b
+          DEB_BUILD_OPTIONS="noautodbgsym" dpkg-buildpackage -us -uc -b
 
       - name: Locate Debian build metadata
         run: |
@@ -111,7 +111,6 @@ jobs:
           path: |
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.changes
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
-            ${{ github.workspace }}/../lofibox-dbgsym_*_${{ matrix.deb_arch }}.ddeb
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
 
   build-raspi-armhf-package:
@@ -136,7 +135,7 @@ jobs:
           cpu_info: cpuinfo/raspberrypi_zero_w
           image_additional_mb: 4096
           shell: /bin/bash -eo pipefail
-          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox-dbgsym_*_armhf.ddeb;../lofibox_*_armhf.buildinfo"
+          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox_*_armhf.buildinfo"
           copy_artifact_dest: armhf-artifacts
           copy_artifacts_on_fail: yes
           commands: |
@@ -174,7 +173,7 @@ jobs:
             dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
 
             chmod +x debian/rules debian/tests/smoke
-            dpkg-buildpackage -us -uc -b
+            DEB_BUILD_OPTIONS="noautodbgsym" dpkg-buildpackage -us -uc -b
             lintian --profile debian ../lofibox_*_armhf.changes
             test "$(dpkg-deb -f ../lofibox_*_armhf.deb Architecture)" = "armhf"
 
