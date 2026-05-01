@@ -142,7 +142,14 @@ build needs the target `libstdc++6` package in addition to the cross compiler
 runtime packages, otherwise `dh_shlibdeps` cannot resolve C++ binary
 dependencies from the target ELF files.
 
-The Raspberry Pi CM0 package is built with ARM mode and ARM1176JZF-S/VFP flags:
+The Raspberry Pi CM0 package is built as a Raspberry Pi OS/Raspbian armhf
+package, not as a generic Ubuntu/Debian armhf package. Generic Ubuntu armhf
+start files are ARMv7 and will make the final ELF unsuitable for ARM1176JZF-S
+devices even when LoFiBox object files are compiled with ARMv6 flags. The
+publish workflow therefore uses a Raspbian ARMv6+VFP sysroot and forces the
+linker to prefer `/usr/lib/arm-linux-gnueabihf` start files.
+
+The CM0 build uses ARM mode and ARM1176JZF-S/VFP flags:
 
 ```text
 -marm -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard
