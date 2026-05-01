@@ -481,26 +481,69 @@ jobs:
           echo "LOFIBOX_IMPORTED_GPG_KEY_ID=$signing_key" >> "$GITHUB_ENV"
           rm -f "$key_input" "$key_material"
 
+      - name: Validate Debian package artifacts
+        run: |
+          set -euxo pipefail
+          find debian-artifacts -maxdepth 2 -type f | sort
+          mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
+          printf '%s\n' "${changes_files[@]}" > "$RUNNER_TEMP/lofibox-changes-files.txt"
+
+          if [ "${#changes_files[@]}" -ne 3 ]; then
+            echo "::error::Expected exactly amd64, arm64, and armhf .changes files; found ${#changes_files[@]}."
+            printf '  %s\n' "${changes_files[@]}"
+            exit 1
+          fi
+
+          for arch in amd64 arm64 armhf; do
+            if ! grep -Eq "_${arch}\.changes$" "$RUNNER_TEMP/lofibox-changes-files.txt"; then
+              echo "::error::Missing $arch .changes artifact."
+              exit 1
+            fi
+            if ! find debian-artifacts -name "lofibox_*_${arch}.deb" -type f | grep -q .; then
+              echo "::error::Missing $arch .deb artifact."
+              exit 1
+            fi
+            if ! find debian-artifacts -name "lofibox_*_${arch}.buildinfo" -type f | grep -q .; then
+              echo "::error::Missing $arch .buildinfo artifact."
+              exit 1
+            fi
+          done
+
       - name: Build Pages artifact
         env:
           LOFIBOX_APT_GPG_KEY_ID: ${{ secrets.LOFIBOX_APT_GPG_KEY_ID }}
+          LOFIBOX_APT_GPG_PASSPHRASE: ${{ secrets.LOFIBOX_APT_GPG_PASSPHRASE }}
         run: |
+          set -euo pipefail
           suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
           signing_key="${LOFIBOX_IMPORTED_GPG_KEY_ID:-$LOFIBOX_APT_GPG_KEY_ID}"
-          test -n "$signing_key"
-          mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
-          if [ "${#changes_files[@]}" -lt 3 ]; then
-            printf 'Expected amd64, arm64, and armhf changes files, found %s:\n' "${#changes_files[@]}" >&2
-            printf '  %s\n' "${changes_files[@]}" >&2
+          if [ -z "$signing_key" ]; then
+            echo "::error::No APT signing key id is available after importing LOFIBOX_APT_GPG_PRIVATE_KEY."
+            exit 1
+          fi
+
+          passphrase_args=()
+          gpg_sign_args=(--batch --yes --local-user "$signing_key" --detach-sign)
+          if [ -n "${LOFIBOX_APT_GPG_PASSPHRASE:-}" ]; then
+            passphrase_file="$RUNNER_TEMP/lofibox-apt-gpg-passphrase"
+            printf '%s' "$LOFIBOX_APT_GPG_PASSPHRASE" > "$passphrase_file"
+            chmod 0600 "$passphrase_file"
+            passphrase_args+=(--gpg-passphrase-file "$passphrase_file")
+            gpg_sign_args+=(--pinentry-mode loopback --passphrase-file "$passphrase_file")
+          fi
+
+          printf 'LoFiBox APT signing probe\n' > "$RUNNER_TEMP/signing-probe.txt"
+          if ! gpg "${gpg_sign_args[@]}" --output "$RUNNER_TEMP/signing-probe.sig" "$RUNNER_TEMP/signing-probe.txt"; then
+            echo "::error::The imported APT signing key cannot sign non-interactively. If the key is passphrase-protected, add repository secret LOFIBOX_APT_GPG_PASSPHRASE; otherwise export an unprotected CI signing subkey."
             exit 1
           fi
 
           changes_args=()
-          for changes_file in "${changes_files[@]}"; do
+          while IFS= read -r changes_file; do
             changes_args+=(--changes "$changes_file")
-          done
+          done < "$RUNNER_TEMP/lofibox-changes-files.txt"
 
-          chmod +x lofibox-apt/scripts/*.sh
+          chmod +x lofibox-apt/scripts/*.sh LoFiBox-Zero/scripts/*.sh
           lofibox-apt/scripts/build-public-artifact.sh \
             --site lofibox-apt/site \
             --lofibox-zero LoFiBox-Zero \
@@ -512,7 +555,20 @@ jobs:
             --origin LoFiBox \
             --label "LoFiBox Preview" \
             --gpg-key "$signing_key" \
+            "${passphrase_args[@]}" \
             "${changes_args[@]}"
+
+      - name: Validate Pages and APT repository artifact
+        run: |
+          set -euxo pipefail
+          suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+          test -f public/index.html
+          test -s public/lofibox-archive-keyring.pgp
+          test -f "public/debian/dists/$suite/InRelease"
+          test -f "public/debian/dists/$suite/Release"
+          for arch in amd64 arm64 armhf; do
+            test -s "public/debian/dists/$suite/main/binary-$arch/Packages"
+          done
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

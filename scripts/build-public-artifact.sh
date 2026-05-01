@@ -25,6 +25,8 @@ Options:
   --origin <text>        Release Origin field. Default: LoFiBox
   --label <text>         Release Label field. Default: LoFiBox Preview
   --gpg-key <key-id>     GPG key id/fingerprint used to sign Release/InRelease
+  --gpg-passphrase-file <path>
+                         Optional passphrase file for protected signing keys.
   --help                 Show this help.
 EOF
 }
@@ -39,6 +41,7 @@ repo_name="lofibox-preview"
 origin="LoFiBox"
 label="LoFiBox Preview"
 gpg_key=""
+gpg_passphrase_file=""
 changes=()
 
 while [[ $# -gt 0 ]]; do
@@ -87,6 +90,10 @@ while [[ $# -gt 0 ]]; do
       gpg_key="${2:?missing value for --gpg-key}"
       shift 2
       ;;
+    --gpg-passphrase-file)
+      gpg_passphrase_file="${2:?missing value for --gpg-passphrase-file}"
+      shift 2
+      ;;
     --help|-h)
       usage
       exit 0
@@ -111,6 +118,11 @@ fi
 
 if [[ ${#changes[@]} -eq 0 ]]; then
   echo "At least one --changes file is required." >&2
+  exit 2
+fi
+
+if [[ -n "$gpg_passphrase_file" && ! -f "$gpg_passphrase_file" ]]; then
+  echo "GPG passphrase file not found: $gpg_passphrase_file" >&2
   exit 2
 fi
 
@@ -144,6 +156,10 @@ builder_args=(
 
 if [[ -n "$architectures" ]]; then
   builder_args+=(--architectures "$architectures")
+fi
+
+if [[ -n "$gpg_passphrase_file" ]]; then
+  builder_args+=(--gpg-passphrase-file "$gpg_passphrase_file")
 fi
 
 for changes_file in "${absolute_changes[@]}"; do
