@@ -311,7 +311,6 @@ jobs:
             libdistro-info-perl \
             libc6-dev:armhf \
             libfreetype-dev:armhf \
-            libstdc++-12-dev:armhf \
             libstdc++6:armhf \
             libx11-dev:armhf \
             libxkbcommon-dev:armhf \

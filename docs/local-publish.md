@@ -146,8 +146,8 @@ The Raspberry Pi CM0 package is built as a Raspberry Pi OS/Raspbian armhf
 package, not as a generic Ubuntu/Debian armhf package. Generic Ubuntu armhf
 start files are ARMv7 and will make the final ELF unsuitable for ARM1176JZF-S
 devices even when LoFiBox object files are compiled with ARMv6 flags. The
-publish workflow therefore uses a Raspbian ARMv6+VFP sysroot and forces the
-linker to prefer `/usr/lib/arm-linux-gnueabihf` start files.
+publish workflow therefore uses Raspbian ARMv6+VFP target runtime/start files
+and forces the linker to prefer `/usr/lib/arm-linux-gnueabihf`.
 
 The CM0 build uses ARM mode and ARM1176JZF-S/VFP flags:
 
