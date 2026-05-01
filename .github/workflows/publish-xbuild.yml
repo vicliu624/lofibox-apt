@@ -250,7 +250,7 @@ jobs:
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 120
 
     steps:
       - name: Checkout LoFiBox-Zero
@@ -259,121 +259,75 @@ jobs:
           repository: vicliu624/LoFiBox-Zero
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
 
-      - name: Install Raspberry Pi ARMv6 cross build tools
-        run: |
-          sudo dpkg --add-architecture armhf
-          sudo python3 - <<'PY'
-          from pathlib import Path
+      - name: Prepare Raspberry Pi artifact directory
+        run: mkdir -p package-artifacts
 
-          for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
-              text = path.read_text(encoding="utf-8")
-              if "URIs:" not in text or "ubuntu" not in text:
-                  continue
-              stanzas = []
-              for stanza in text.strip().split("\n\n"):
-                  lines = stanza.splitlines()
-                  if any(line.startswith("Architectures:") for line in lines):
-                      stanzas.append(stanza)
-                      continue
-                  out = []
-                  for line in lines:
-                      out.append(line)
-                      if line.startswith("Types:"):
-                          out.append("Architectures: amd64")
-                  stanzas.append("\n".join(out))
-              path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
-          PY
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ca-certificates curl gnupg
-          curl -fsSL http://archive.raspbian.org/raspbian.public.key \
-            | sudo gpg --dearmor -o /usr/share/keyrings/raspbian-archive-keyring.gpg
-          cat >/tmp/raspbian-armv6.sources <<'EOF'
-          Types: deb
-          URIs: http://archive.raspbian.org/raspbian
-          Suites: bookworm
-          Components: main contrib non-free rpi
-          Architectures: armhf
-          Signed-By: /usr/share/keyrings/raspbian-archive-keyring.gpg
-          EOF
-          sudo mv /tmp/raspbian-armv6.sources /etc/apt/sources.list.d/raspbian-armv6.sources
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            apt-utils \
-            binutils-arm-linux-gnueabihf \
-            build-essential \
-            cmake \
-            debhelper-compat \
-            desktop-file-utils \
-            devscripts \
-            dpkg-dev \
-            g++-12-arm-linux-gnueabihf \
-            gcc-12-arm-linux-gnueabihf \
-            libdistro-info-perl \
-            libc6-dev:armhf \
-            libfreetype-dev:armhf \
-            libstdc++6:armhf \
-            libx11-dev:armhf \
-            libxkbcommon-dev:armhf \
-            lintian \
-            ninja-build \
-            pkgconf \
-            python3
+      - name: Build Raspberry Pi ARMv6 package
+        uses: pguyot/arm-runner-action@v2.6.5
+        with:
+          base_image: dietpi:rpi_armv6_bookworm
+          cpu: arm1176
+          cpu_info: cpuinfo/raspberrypi_zero_w
+          image_additional_mb: 4096
+          copy_artifact_path: package-artifacts/*
+          copy_artifact_dest: package-artifacts
+          commands: |
+            set -eux
+            export DEBIAN_FRONTEND=noninteractive
+            export DEBEMAIL=maintainers@example.invalid
+            export DEBFULLNAME="LoFiBox contributors"
+            apt-get update
+            apt-get install -y --no-install-recommends \
+              apt-utils \
+              build-essential \
+              ca-certificates \
+              cmake \
+              debhelper-compat \
+              desktop-file-utils \
+              devscripts \
+              dpkg-dev \
+              libdistro-info-perl \
+              libfreetype-dev \
+              libx11-dev \
+              libxkbcommon-dev \
+              lintian \
+              ninja-build \
+              pkgconf \
+              python3
 
-      - name: Apply preview version suffix
-        env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
-        run: |
-          current_version="$(dpkg-parsechangelog -S Version)"
-          preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-          apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-          package_distribution="unstable"
-          if [ "$preview_suffix" = "auto" ]; then
-            suffix="~lofibox${GITHUB_RUN_NUMBER}"
-          else
-            suffix="$preview_suffix"
-          fi
-          dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
-          dpkg-parsechangelog -S Version
+            current_version="$(dpkg-parsechangelog -S Version)"
+            preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
+            apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
+            package_distribution="unstable"
+            if [ "$preview_suffix" = "auto" ]; then
+              suffix="~lofibox${{ github.run_number }}"
+            else
+              suffix="$preview_suffix"
+            fi
+            dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
+            dpkg-parsechangelog -S Version
 
-      - name: Build Raspberry Pi ARMv6 armhf package
-        run: |
-          chmod +x debian/rules debian/tests/smoke
-          export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
-          export DEB_CFLAGS_APPEND="-marm -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-          export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
-          export DEB_LDFLAGS_APPEND="-B/usr/lib/arm-linux-gnueabihf/ -L/usr/lib/arm-linux-gnueabihf -L/lib/arm-linux-gnueabihf"
-          export CC=arm-linux-gnueabihf-gcc-12
-          export CXX=arm-linux-gnueabihf-g++-12
-          export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
-          dpkg-buildpackage --host-arch=armhf -us -uc -b
+            chmod +x debian/rules debian/tests/smoke
+            export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
+            dpkg-buildpackage -us -uc -b
 
-      - name: Locate Debian build metadata
-        run: |
-          changes_file="$(find "$GITHUB_WORKSPACE/.." -maxdepth 1 -name 'lofibox_*_armhf.changes' -print -quit)"
-          test -n "$changes_file"
-          test -s "$changes_file"
-          echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
+            changes_file="$(find .. -maxdepth 1 -name 'lofibox_*_armhf.changes' -print -quit)"
+            test -n "$changes_file"
+            test -s "$changes_file"
+            lintian --profile debian "$changes_file"
 
-      - name: Run Lintian
-        run: lintian --profile debian "$LOFIBOX_CHANGES"
+            deb_file="$(find .. -maxdepth 1 -name 'lofibox_*_armhf.deb' -print -quit)"
+            test -n "$deb_file"
+            test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
+            tmp_dir="$(mktemp -d)"
+            dpkg-deb -x "$deb_file" "$tmp_dir"
+            readelf -A "$tmp_dir/usr/bin/lofibox" | tee /tmp/lofibox-armhf-attributes.txt
+            grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' /tmp/lofibox-armhf-attributes.txt
 
-      - name: Validate Raspberry Pi ARMv6 binary tags
-        run: |
-          deb_file="$(find "$GITHUB_WORKSPACE/.." -maxdepth 1 -name 'lofibox_*_armhf.deb' -print -quit)"
-          test -n "$deb_file"
-          test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
-          tmp_dir="$(mktemp -d)"
-          dpkg-deb -x "$deb_file" "$tmp_dir"
-          arm-linux-gnueabihf-readelf -A "$tmp_dir/usr/bin/lofibox" | tee "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
-          grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
-
-      - name: Stage Raspberry Pi armhf artifact
-        run: |
-          mkdir -p package-artifacts
-          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.changes package-artifacts/
-          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.deb package-artifacts/
-          cp "$GITHUB_WORKSPACE"/../lofibox_*_armhf.buildinfo package-artifacts/
+            mkdir -p package-artifacts
+            cp ../lofibox_*_armhf.changes package-artifacts/
+            cp ../lofibox_*_armhf.deb package-artifacts/
+            cp ../lofibox_*_armhf.buildinfo package-artifacts/
 
       - name: Upload Raspberry Pi armhf artifact
         uses: actions/upload-artifact@v4

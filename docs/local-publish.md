@@ -110,7 +110,7 @@ suite: trixie
 preview_suffix: auto
 ```
 
-架构发布约束：预览源必须同时发布 `amd64`、`arm64` 和 `armhf`。`arm64` 面向 CM4/CM5 的 64-bit Raspberry Pi OS/Debian；`armhf` 面向 CM0/ARMv6，发布流水线会用 armhf hard-float 交叉工具链并强制 `-march=armv6 -mfpu=vfp -mfloat-abi=hard`，再用 `readelf` 校验 CPU attribute，不能用普通 ARMv7 baseline 的 armhf 包冒充。
+架构发布约束：预览源必须同时发布 `amd64`、`arm64` 和 `armhf`。`arm64` 面向 CM4/CM5 的 64-bit Raspberry Pi OS/Debian；`armhf` 面向 CM0/ARMv6，发布流水线必须在 Raspberry Pi OS/Raspbian ARMv6 用户态中构建，并用 `readelf` 校验 CPU attribute，不能用普通 ARMv7 baseline 的 armhf 包冒充。
 
 预览包版本默认使用 `0.1.0-1~lofiboxN` 这类后缀。`~` 让预览源版本低于未来 Debian 官方源的 `0.1.0-1`，所以 workflow 使用 `dch -b` 明确允许这次有意的预览降版本。注意这里有两层命名：APT 仓库 suite 仍然是 `trixie`，但 Debian 包构建产物 `.changes` 的 changelog distribution 固定为 `unstable`，避免 Lintian 把第三方源 suite 误判成无效上传目标。
 
@@ -129,31 +129,33 @@ The GitHub publisher builds three package architectures:
 
 - `amd64`, built natively and validated with lintian and autopkgtest.
 - `arm64`, cross-built for Raspberry Pi CM4/CM5 class 64-bit systems.
-- `armhf`, cross-built for Raspberry Pi CM0 / ARMv6 hard-float systems.
+- `armhf`, built inside a Raspberry Pi OS/Raspbian ARMv6 userspace for
+  Raspberry Pi CM0 / ARMv6 hard-float systems.
 
 Cross builds are package-construction jobs, not runtime execution jobs. They use
 `DEB_BUILD_OPTIONS=nocheck` because the GitHub runner is x86_64 and must not try
 to execute target architecture test binaries. Runtime smoke coverage stays on
 the native package job and device validation stays on real hardware.
 
-The cross-build environment must install both target development libraries and
-target runtime libraries required by `dh_shlibdeps`. In particular, the package
-build needs the target `libstdc++6` package in addition to the cross compiler
-runtime packages, otherwise `dh_shlibdeps` cannot resolve C++ binary
-dependencies from the target ELF files.
+The arm64 cross-build environment must install both target development
+libraries and target runtime libraries required by `dh_shlibdeps`. In
+particular, the package build needs the target `libstdc++6` package in addition
+to the cross compiler runtime packages, otherwise `dh_shlibdeps` cannot resolve
+C++ binary dependencies from the target ELF files.
 
 The Raspberry Pi CM0 package is built as a Raspberry Pi OS/Raspbian armhf
 package, not as a generic Ubuntu/Debian armhf package. Generic Ubuntu armhf
 start files are ARMv7 and will make the final ELF unsuitable for ARM1176JZF-S
 devices even when LoFiBox object files are compiled with ARMv6 flags. The
-publish workflow therefore uses Raspbian ARMv6+VFP target runtime/start files
-and forces the linker to prefer `/usr/lib/arm-linux-gnueabihf`.
+publish workflow therefore uses an ARMv6 Raspberry Pi OS/Raspbian userspace
+through `pguyot/arm-runner-action`, instead of mixing Raspbian target packages
+into an Ubuntu host.
 
-The CM0 build uses ARM mode and ARM1176JZF-S/VFP flags:
+The CM0 build must validate the final installed executable with `readelf -A`.
+The accepted attributes are ARMv6 / ARM1176-class, for example:
 
 ```text
--marm -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard
+Tag_CPU_name: "6"
+Tag_CPU_arch: v6
+Tag_FP_arch: VFPv2
 ```
-
-Do not replace this with plain `-march=armv6` in the publisher. GCC may select
-Thumb-1 for compiler probes, and Thumb-1 cannot use the hard-float VFP ABI.
