@@ -259,26 +259,51 @@ jobs:
           repository: vicliu624/LoFiBox-Zero
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
 
-      - name: Prepare Raspberry Pi artifact directory
-        run: mkdir -p package-artifacts
+      - name: Install Raspberry Pi ARMv6 chroot tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binfmt-support \
+            ca-certificates \
+            curl \
+            debootstrap \
+            gnupg \
+            qemu-user-static
 
       - name: Build Raspberry Pi ARMv6 package
-        uses: pguyot/arm-runner-action@v2.6.5
-        with:
-          base_image: raspios_lite:latest
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
-          image_additional_mb: 4096
-          copy_artifact_path: package-artifacts/*
-          copy_artifact_dest: package-artifacts
-          commands: |
-            set -eux
+        env:
+          DEBEMAIL: maintainers@example.invalid
+          DEBFULLNAME: LoFiBox contributors
+        run: |
+          set -euxo pipefail
+
+          root="$RUNNER_TEMP/raspbian-armhf-root"
+          sudo rm -rf "$root"
+
+          curl -fsSL http://archive.raspbian.org/raspbian.public.key -o "$RUNNER_TEMP/raspbian.public.key"
+          gpg --dearmor --yes -o "$RUNNER_TEMP/raspbian-archive-keyring.gpg" "$RUNNER_TEMP/raspbian.public.key"
+          sudo debootstrap \
+            --arch=armhf \
+            --foreign \
+            --keyring="$RUNNER_TEMP/raspbian-archive-keyring.gpg" \
+            bookworm \
+            "$root" \
+            http://archive.raspbian.org/raspbian
+          sudo cp /usr/bin/qemu-arm-static "$root/usr/bin/"
+          sudo chroot "$root" /debootstrap/debootstrap --second-stage
+
+          sudo mount -t proc proc "$root/proc"
+          sudo mount --bind /sys "$root/sys"
+          sudo mount --bind /dev "$root/dev"
+          trap 'sudo umount -R "$root/proc" || true; sudo umount -R "$root/sys" || true; sudo umount -R "$root/dev" || true' EXIT
+
+          sudo chroot "$root" /bin/bash -lc '
+            set -euxo pipefail
             export DEBIAN_FRONTEND=noninteractive
-            export DEBEMAIL=maintainers@example.invalid
-            export DEBFULLNAME="LoFiBox contributors"
             apt-get update
             apt-get install -y --no-install-recommends \
               apt-utils \
+              binutils \
               build-essential \
               ca-certificates \
               cmake \
@@ -294,7 +319,26 @@ jobs:
               ninja-build \
               pkgconf \
               python3
+          '
 
+          sudo mkdir -p "$root/work/LoFiBox-Zero"
+          tar \
+            --exclude=.git \
+            --exclude=.cache \
+            --exclude=.tmp \
+            --exclude=build \
+            --exclude=obj-* \
+            --exclude=out \
+            --exclude=runs \
+            -C "$GITHUB_WORKSPACE" \
+            -cf - . | sudo tar -C "$root/work/LoFiBox-Zero" -xf -
+
+          sudo chroot "$root" /bin/bash -lc '
+            set -euxo pipefail
+            cd /work/LoFiBox-Zero
+            export DEBIAN_FRONTEND=noninteractive
+            export DEBEMAIL=maintainers@example.invalid
+            export DEBFULLNAME="LoFiBox contributors"
             current_version="$(dpkg-parsechangelog -S Version)"
             preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
             apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
@@ -311,23 +355,25 @@ jobs:
             export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
             dpkg-buildpackage -us -uc -b
 
-            changes_file="$(find .. -maxdepth 1 -name 'lofibox_*_armhf.changes' -print -quit)"
+            changes_file="$(find /work -maxdepth 1 -name "lofibox_*_armhf.changes" -print -quit)"
             test -n "$changes_file"
             test -s "$changes_file"
             lintian --profile debian "$changes_file"
 
-            deb_file="$(find .. -maxdepth 1 -name 'lofibox_*_armhf.deb' -print -quit)"
+            deb_file="$(find /work -maxdepth 1 -name "lofibox_*_armhf.deb" -print -quit)"
             test -n "$deb_file"
             test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
             tmp_dir="$(mktemp -d)"
             dpkg-deb -x "$deb_file" "$tmp_dir"
             readelf -A "$tmp_dir/usr/bin/lofibox" | tee /tmp/lofibox-armhf-attributes.txt
-            grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' /tmp/lofibox-armhf-attributes.txt
+            grep -Eq "Tag_CPU_arch: v6|Tag_CPU_name: \"6\"" /tmp/lofibox-armhf-attributes.txt
+          '
 
-            mkdir -p package-artifacts
-            cp ../lofibox_*_armhf.changes package-artifacts/
-            cp ../lofibox_*_armhf.deb package-artifacts/
-            cp ../lofibox_*_armhf.buildinfo package-artifacts/
+          mkdir -p package-artifacts
+          sudo cp "$root"/work/lofibox_*_armhf.changes package-artifacts/
+          sudo cp "$root"/work/lofibox_*_armhf.deb package-artifacts/
+          sudo cp "$root"/work/lofibox_*_armhf.buildinfo package-artifacts/
+          sudo chown -R "$USER:$USER" package-artifacts
 
       - name: Upload Raspberry Pi armhf artifact
         uses: actions/upload-artifact@v4

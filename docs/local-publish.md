@@ -147,11 +147,10 @@ The Raspberry Pi CM0 package is built as a Raspberry Pi OS/Raspbian armhf
 package, not as a generic Ubuntu/Debian armhf package. Generic Ubuntu armhf
 start files are ARMv7 and will make the final ELF unsuitable for ARM1176JZF-S
 devices even when LoFiBox object files are compiled with ARMv6 flags. The
-publish workflow therefore uses an ARMv6 Raspberry Pi OS userspace through
-`pguyot/arm-runner-action` and the official `raspios_lite:latest` image,
-instead of mixing Raspbian target packages into an Ubuntu host. Before changing
-that image, validate the download URL first; stale third-party image aliases can
-break before the build step even starts.
+publish workflow therefore creates a Raspbian `bookworm` ARMv6 userspace with
+`debootstrap` and `qemu-arm-static`, instead of mixing Raspbian target packages
+into an Ubuntu host or relying on a full third-party disk image. If this flow is
+changed, validate it locally in the same chroot shape before pushing.
 
 The CM0 build must validate the final installed executable with `readelf -A`.
 The accepted attributes are ARMv6 / ARM1176-class, for example:
