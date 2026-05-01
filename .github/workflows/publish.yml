@@ -111,6 +111,7 @@ jobs:
           path: |
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.changes
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
+            ${{ github.workspace }}/../lofibox-dbgsym_*_${{ matrix.deb_arch }}.ddeb
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
 
   build-raspi-armhf-package:
@@ -135,7 +136,7 @@ jobs:
           cpu_info: cpuinfo/raspberrypi_zero_w
           image_additional_mb: 4096
           shell: /bin/bash -eo pipefail
-          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox_*_armhf.buildinfo"
+          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox-dbgsym_*_armhf.ddeb;../lofibox_*_armhf.buildinfo"
           copy_artifact_dest: armhf-artifacts
           copy_artifacts_on_fail: yes
           commands: |
