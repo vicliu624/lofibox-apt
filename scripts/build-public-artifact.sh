@@ -120,6 +120,18 @@ if [[ ! -x "$repo_builder" ]]; then
   exit 2
 fi
 
+site_dir="$(cd "$site_dir" && pwd)"
+output_parent="$(mkdir -p "$(dirname "$output_dir")" && cd "$(dirname "$output_dir")" && pwd)"
+output_dir="$output_parent/$(basename "$output_dir")"
+lofibox_zero_dir="$(cd "$lofibox_zero_dir" && pwd)"
+repo_builder="$lofibox_zero_dir/scripts/build-github-pages-apt-repository.sh"
+
+absolute_changes=()
+for changes_file in "${changes[@]}"; do
+  changes_parent="$(cd "$(dirname "$changes_file")" && pwd)"
+  absolute_changes+=("$changes_parent/$(basename "$changes_file")")
+done
+
 builder_args=(
   --suite "$suite"
   --component "$component"
@@ -134,11 +146,14 @@ if [[ -n "$architectures" ]]; then
   builder_args+=(--architectures "$architectures")
 fi
 
-for changes_file in "${changes[@]}"; do
+for changes_file in "${absolute_changes[@]}"; do
   builder_args+=(--changes "$changes_file")
 done
 
-"$repo_builder" "${builder_args[@]}"
+(
+  cd "$lofibox_zero_dir"
+  "$repo_builder" "${builder_args[@]}"
+)
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 "$script_dir/stage-pages-site.sh" \
