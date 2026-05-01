@@ -116,6 +116,10 @@ preview_suffix: auto
 
 Lintian 必须使用 Debian profile：`lintian --profile debian "$LOFIBOX_CHANGES"`。GitHub runner 是 Ubuntu，如果使用默认 profile，它会按 Ubuntu 发行版集合校验 `.changes` 的 Distribution，从而把 Debian 的 `unstable` 判成 `bad-distribution-in-changes-file`。
 
+APT Release signing must run in batch mode in CI. The LoFiBox-Zero repository
+builder passes `aptly publish snapshot -batch=true` so GPG does not require an
+interactive tty during GitHub Actions publishing.
+
 也可以手动触发 workflow，并输入：
 
 ```text
