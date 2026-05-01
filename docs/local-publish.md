@@ -136,6 +136,12 @@ Cross builds are package-construction jobs, not runtime execution jobs. They use
 to execute target architecture test binaries. Runtime smoke coverage stays on
 the native package job and device validation stays on real hardware.
 
+The cross-build environment must install both target development libraries and
+target runtime libraries required by `dh_shlibdeps`. In particular, the package
+build needs the target `libstdc++6` package in addition to the cross compiler
+runtime packages, otherwise `dh_shlibdeps` cannot resolve C++ binary
+dependencies from the target ELF files.
+
 The Raspberry Pi CM0 package is built with ARM mode and ARM1176JZF-S/VFP flags:
 
 ```text

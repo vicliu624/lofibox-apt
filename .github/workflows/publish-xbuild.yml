@@ -183,6 +183,7 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev:arm64 \
+            libstdc++6:arm64 \
             libx11-dev:arm64 \
             libxkbcommon-dev:arm64 \
             lintian \
@@ -311,6 +312,7 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev:armhf \
+            libstdc++6:armhf \
             libx11-dev:armhf \
             libxkbcommon-dev:armhf \
             lintian \
