@@ -265,7 +265,7 @@ jobs:
       - name: Build Raspberry Pi ARMv6 package
         uses: pguyot/arm-runner-action@v2.6.5
         with:
-          base_image: dietpi:rpi_armv6_bookworm
+          base_image: raspios_lite:latest
           cpu: arm1176
           cpu_info: cpuinfo/raspberrypi_zero_w
           image_additional_mb: 4096
