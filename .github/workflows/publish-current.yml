@@ -35,9 +35,9 @@ jobs:
       matrix:
         include:
           - deb_arch: amd64
-            runs_on: ubuntu-22.04
+            runs_on: ubuntu-24.04
           - deb_arch: arm64
-            runs_on: ubuntu-22.04-arm
+            runs_on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout LoFiBox-Zero
@@ -117,7 +117,7 @@ jobs:
 
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -297,7 +297,7 @@ jobs:
     needs:
       - build-native-package
       - build-raspi-armhf-package
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
       name: github-pages
