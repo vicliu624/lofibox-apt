@@ -47,6 +47,28 @@ jobs:
 
       - name: Install build tools
         run: |
+          runner_arch="$(dpkg --print-architecture)"
+          runner_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"
+          if [ "$runner_arch" = "arm64" ]; then
+            sudo rm -f /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list
+            sudo truncate -s 0 /etc/apt/sources.list
+            cat >/tmp/ubuntu-ports-native.sources <<EOF
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: ${runner_codename} ${runner_codename}-updates ${runner_codename}-backports
+          Components: main universe
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: ${runner_codename}-security
+          Components: main universe
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+            sudo mv /tmp/ubuntu-ports-native.sources /etc/apt/sources.list.d/ubuntu-ports-native.sources
+          fi
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             apt-utils \
