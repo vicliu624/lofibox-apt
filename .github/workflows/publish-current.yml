@@ -133,25 +133,48 @@ jobs:
           runner_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"
           sudo python3 - <<'PY'
           from pathlib import Path
+          import re
+
+          HOST_ARCH = "amd64"
+
+          def is_primary_ubuntu_uri(text):
+              return "ubuntu.com/ubuntu" in text and "ubuntu-ports" not in text
 
           for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
               text = path.read_text(encoding="utf-8")
-              if "URIs:" not in text or "ubuntu" not in text:
-                  continue
               stanzas = []
+              changed = False
               for stanza in text.strip().split("\n\n"):
                   lines = stanza.splitlines()
-                  if any(line.startswith("Architectures:") for line in lines):
+                  if not any(line.startswith("URIs:") and is_primary_ubuntu_uri(line) for line in lines):
                       stanzas.append(stanza)
                       continue
-                  out = []
-                  for line in lines:
-                      out.append(line)
-                      if line.startswith("Types:"):
-                          out.append("Architectures: amd64")
-                  stanzas.append("\n".join(out))
-              path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
 
+                  out = []
+                  saw_arch = False
+                  for line in lines:
+                      if line.startswith("Architectures:"):
+                          out.append(f"Architectures: {HOST_ARCH}")
+                          saw_arch = True
+                      else:
+                          out.append(line)
+                  if not saw_arch:
+                      with_arch = []
+                      inserted = False
+                      for line in out:
+                          with_arch.append(line)
+                          if line.startswith("Types:") and not inserted:
+                              with_arch.append(f"Architectures: {HOST_ARCH}")
+                              inserted = True
+                      if not inserted:
+                          with_arch.append(f"Architectures: {HOST_ARCH}")
+                      out = with_arch
+                  stanzas.append("\n".join(out))
+                  changed = True
+              if changed:
+                  path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
+
+          legacy_source = re.compile(r"^(deb(?:-src)?\s+)(\[[^\]]*\]\s+)?(\S+\s+.*)$")
           legacy_paths = [Path("/etc/apt/sources.list"), *Path("/etc/apt/sources.list.d").glob("*.list")]
           for path in legacy_paths:
               if not path.exists():
@@ -160,15 +183,19 @@ jobs:
               for line in path.read_text(encoding="utf-8").splitlines():
                   stripped = line.lstrip()
                   prefix = line[: len(line) - len(stripped)]
-                  if stripped.startswith(("deb ", "deb-src ")) and "ubuntu" in stripped:
-                      head = stripped.split("]", 1)[0]
-                      if "arch=" not in head:
-                          parts = stripped.split(None, 2)
-                          if len(parts) >= 3 and parts[1].startswith("["):
-                              option_end = stripped.find("]")
-                              stripped = stripped[:option_end] + " arch=amd64" + stripped[option_end:]
-                          elif len(parts) >= 3:
-                              stripped = f"{parts[0]} [arch=amd64] {parts[1]} {parts[2]}"
+                  if stripped.startswith(("deb ", "deb-src ")) and is_primary_ubuntu_uri(stripped):
+                      match = legacy_source.match(stripped)
+                      if match:
+                          lead, option_block, rest = match.groups()
+                          options = []
+                          if option_block:
+                              options = option_block.strip()[1:-1].split()
+                              options = [
+                                  option for option in options
+                                  if not option.startswith(("arch=", "arch+=", "arch-="))
+                              ]
+                          options.insert(0, f"arch={HOST_ARCH}")
+                          stripped = f"{lead}[{' '.join(options)}] {rest}"
                           line = prefix + stripped
                   lines.append(line)
               path.write_text("\n".join(lines) + "\n", encoding="utf-8")
