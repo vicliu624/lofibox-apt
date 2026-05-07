@@ -18,6 +18,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html">开始使用</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -35,6 +37,8 @@
       <aside class="doc-nav" aria-label="文档导航">
         <a href="index.html">文档总览</a>
         <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -95,6 +99,19 @@ EOF</code></pre>
           <li>仓库会发布 <code>amd64</code>、<code>arm64</code>，以及兼容 Raspberry Pi ARMv6/CM0 的 <code>armhf</code> 包。armhf 构建会强制 ARMv6 hard-float flags，并用 ELF CPU attribute 校验。</li>
           <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
         </ol>
+
+        <h2>0.2.0 的 APT CI 注意点</h2>
+        <p>
+          push 触发的正式发布路径是 <code>publish-xbuild.yml</code>。它和 LoFiBox-Zero 源码 CI 是两条线：
+          源码 CI 验证应用仓库，apt CI 会重新构建 Debian 包、校验包元数据、签名软件源，并发布合并后的 Pages artifact。
+        </p>
+        <ul>
+          <li>包构建通过 <code>LOFIBOX_EXTRA_CMAKE_ARGS=-DLOFIBOX_BUILD_WEBUI=ON</code> 显式打开 WebUI。</li>
+          <li>Ubuntu 依赖安装只使用 <code>pkgconf</code>，不同时安装 <code>pkgconf</code> 和 <code>pkg-config</code>，避免 jammy 冲突。</li>
+          <li>foreign architecture 的 apt 源会跟随 runner 自身 Ubuntu codename，因此 22.04 runner 使用 jammy ports，不混入 noble 包。</li>
+          <li>手动 arm64 构建使用原生 <code>ubuntu-22.04-arm</code> runner；cross-build 流程在发布前仍会校验产物架构。</li>
+          <li>Pages 发布 job 会要求 amd64、arm64、armhf 三套包产物都存在，之后才签名并发布 <code>/debian</code>。</li>
+        </ul>
 
         <h2>仓库设置</h2>
         <p>

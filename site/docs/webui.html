@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebUI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero browser-based WebUI remote-control guide.">
+    <link rel="alternate" hreflang="en" href="webui.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/webui.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="webui.html" aria-current="page">WebUI</a>
+          <a href="remix.html">Remix</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="webui.html" aria-current="true">EN</a>
+            <a href="../zh/docs/webui.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="webui.html" aria-current="page">WebUI</a>
+        <a href="remix.html">Remix</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">WebUI</p>
+        <h1>Browser Remote Control</h1>
+        <p>
+          WebUI is the browser projection of the same LoFiBox runtime used by GUI, TUI, and CLI.
+          It is built into the 0.2.0 preview packages and provides Now Playing, Queue, Library, Sources, EQ, Settings, and Diagnostics without a frontend build step.
+        </p>
+
+        <figure class="figure">
+          <img src="../assets/images/webui/now.png" alt="LoFiBox WebUI Now Playing">
+          <figcaption>Now Playing: playback controls, spectrum, progress, source state, and the current Remix effect.</figcaption>
+        </figure>
+
+        <h2>Start WebUI</h2>
+        <pre><code>lofibox --webui
+lofibox --webui --webui-bind 127.0.0.1 --webui-port 8765
+
+LOFIBOX_WEBUI=1 \
+LOFIBOX_WEBUI_BIND=127.0.0.1 \
+LOFIBOX_WEBUI_PORT=8765 \
+lofibox</code></pre>
+        <p>
+          The default port is <code>8765</code>. Use a loopback bind address for local control, or bind to a LAN address only on a trusted network.
+          The WebUI dispatches controlled runtime commands; it does not expose raw credentials.
+        </p>
+
+        <h2>Runtime Transport</h2>
+        <p>
+          The browser loads a single static app from the embedded asset server.
+          Runtime updates arrive through <code>/api/runtime/events</code> WebSocket frames, with <code>/api/runtime/snapshot</code> polling fallback.
+          Mutations are sent through <code>POST /api/runtime/commands</code>, so playback, queue, EQ, and Remix changes follow the same command bus as other interfaces.
+        </p>
+
+        <h2>Pages</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Page</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Now Playing</td><td>Playback status, progress, spectrum, transport controls, source label, and Remix badge.</td></tr>
+              <tr><td>Queue</td><td>Inspect and control the active runtime queue.</td></tr>
+              <tr><td>Library</td><td>Browse library projections and queue playable items.</td></tr>
+              <tr><td>Sources</td><td>Read remote source state and connection information.</td></tr>
+              <tr><td>EQ</td><td>Control 10-band EQ and preset state.</td></tr>
+              <tr><td>Settings</td><td>View runtime settings and cycle the active Remix effect.</td></tr>
+              <tr><td>Diagnostics</td><td>Inspect runtime health and transport state.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Keyboard Shortcuts</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Key</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Space</td><td>Toggle play / pause.</td></tr>
+              <tr><td>ArrowLeft</td><td>Previous track.</td></tr>
+              <tr><td>ArrowRight</td><td>Next track.</td></tr>
+              <tr><td>R / r</td><td>Cycle the built-in Remix effect: OFF, Radio, Tape, Vinyl.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure class="figure">
+          <img src="../assets/images/webui/album.png" alt="LoFiBox WebUI Library album view">
+          <figcaption>Library: browser browsing stays a runtime projection instead of becoming a second library owner.</figcaption>
+        </figure>
+
+        <div class="notice">
+          <strong>Packaging note:</strong>
+          the apt publishing workflow enables WebUI with <code>-DLOFIBOX_BUILD_WEBUI=ON</code>, so 0.2.0 preview packages include this surface.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox WebUI guide.</span>
+        <span><a href="remix.html">Next: Remix</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

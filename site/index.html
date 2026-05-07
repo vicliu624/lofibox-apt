@@ -6,7 +6,7 @@
     <title>LoFiBox Zero | Linux-first Music Player</title>
     <meta
       name="description"
-      content="The official LoFiBox Zero portal: a Linux-first music player for small screens, desktops, terminals, remote media libraries, and automation workflows."
+      content="The official LoFiBox Zero portal: a Linux-first music player for WebUI remote control, small screens, desktops, terminals, remote media libraries, remix effects, and automation workflows."
     >
     <meta name="repository" content="https://github.com/vicliu624/LoFiBox-Zero">
     <link rel="me" href="https://github.com/vicliu624/LoFiBox-Zero">
@@ -24,6 +24,8 @@
         <div class="nav-links">
           <a href="#install">Install</a>
           <a href="docs/get-started.html">Get Started</a>
+          <a href="docs/webui.html">WebUI</a>
+          <a href="docs/remix.html">Remix</a>
           <a href="docs/gui.html">GUI</a>
           <a href="docs/tui.html">TUI</a>
           <a href="docs/cli.html">CLI</a>
@@ -44,7 +46,7 @@
           <h1>LoFiBox Zero</h1>
           <p class="lead">
             A music player for Cardputer Zero, Raspberry Pi, Linux desktops, SSH terminals, and remote media libraries.
-            GUI, TUI, CLI, and future Agent interfaces all sit on the same runtime.
+            WebUI, GUI, TUI, CLI, and future Agent interfaces all sit on the same runtime.
           </p>
           <div class="actions">
             <a class="button primary" href="#install">Install Preview</a>
@@ -110,6 +112,48 @@ sudo apt install lofibox</code></pre>
         <div class="wrap">
           <div class="section-head">
             <div>
+              <p class="eyebrow">New in 0.2.0</p>
+              <h2>Browser control and built-in remix effects</h2>
+            </div>
+            <p>
+              The 0.2.0 preview packages publish the new WebUI surface and the built-in Remix plugin.
+              WebUI gives another runtime projection in the browser; Remix adds realtime Radio, Tape, and Vinyl sound-color effects.
+            </p>
+          </div>
+
+          <div class="grid two">
+            <article class="card">
+              <h3><a href="docs/webui.html">WebUI remote control</a></h3>
+              <p>
+                Start LoFiBox with <code>--webui</code> to control Now Playing, Queue, Library, Sources, EQ, Settings, and Diagnostics from a browser.
+                It uses HTTP plus WebSocket live updates, with polling fallback.
+              </p>
+              <div class="tag-list">
+                <span class="tag">HTTP</span>
+                <span class="tag">WebSocket</span>
+                <span class="tag">Mobile browser</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3><a href="docs/remix.html">Remix effects</a></h3>
+              <p>
+                Cycle OFF, Radio, Tape, and Vinyl without restarting playback.
+                GUI, TUI, and WebUI use <code>R</code>; CLI users can run <code>lofibox remix</code>.
+              </p>
+              <div class="tag-list">
+                <span class="tag">Radio</span>
+                <span class="tag">Tape</span>
+                <span class="tag">Vinyl</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
               <p class="eyebrow">Open Source</p>
               <h2>Source repository and development entry points</h2>
             </div>
@@ -142,15 +186,24 @@ sudo apt install lofibox</code></pre>
           <div class="section-head">
             <div>
               <p class="eyebrow">Interfaces</p>
-              <h2>Three first-class entry points</h2>
+              <h2>Four first-class entry points</h2>
             </div>
             <p>
-              GUI serves small screens and desktop windows, TUI serves native terminal control, and CLI serves one-shot commands,
-              scripts, systemd, tests, and Agents. They share one runtime.
+              WebUI serves browsers and phones, GUI serves small screens and desktop windows, TUI serves native terminal control,
+              and CLI serves one-shot commands, scripts, systemd, tests, and Agents. They share one runtime.
             </p>
           </div>
 
-          <div class="grid">
+          <div class="grid two">
+            <article class="card">
+              <h3>WebUI</h3>
+              <p>Browser-based remote control for playback, queue, library, sources, EQ, settings, diagnostics, and Remix state.</p>
+              <div class="tag-list">
+                <span class="tag">Browser</span>
+                <span class="tag">WebSocket</span>
+                <span class="tag">Remote control</span>
+              </div>
+            </article>
             <article class="card">
               <h3>GUI</h3>
               <p>Designed for 320x170 screens, X11 desktop windows, and device front panels. Covers the main menu, library, search, Now Playing, lyrics, and EQ.</p>
@@ -221,7 +274,7 @@ sudo apt install lofibox</code></pre>
               <h3>EQ / DSP</h3>
               <p>
                 Supports 10-band graphic EQ, presets, preamp, ReplayGain, loudness, limiter, balance, HPF/LPF,
-                and bindings by device, content, or source.
+                bindings by device, content, or source, and plugin-backed Remix effects for Radio, Tape, and Vinyl color.
               </p>
             </article>
           </div>
@@ -239,6 +292,14 @@ sudo apt install lofibox</code></pre>
           </div>
 
           <div class="grid two">
+            <figure class="figure">
+              <img src="assets/images/webui/now.png" alt="LoFiBox WebUI Now Playing page">
+              <figcaption>WebUI Now Playing: browser remote control with live playback and Remix state.</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="assets/images/webui/album.png" alt="LoFiBox WebUI album and library page">
+              <figcaption>WebUI Library: browse albums, queue tracks, and keep the same runtime state.</figcaption>
+            </figure>
             <figure class="figure">
               <img src="assets/images/gui/04-search.png" alt="LoFiBox GUI search window">
               <figcaption>GUI Search: one entry point across local and remote sources.</figcaption>

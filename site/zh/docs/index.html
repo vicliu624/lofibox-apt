@@ -20,6 +20,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html">开始使用</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -37,6 +39,8 @@
       <aside class="doc-nav" aria-label="文档导航">
         <a href="index.html" aria-current="page">文档总览</a>
         <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -58,8 +62,16 @@
             <p>安装预览版、第一次运行、扫描媒体库、播放音乐、诊断环境。</p>
           </article>
           <article class="card">
+            <h3><a href="webui.html">WebUI</a></h3>
+            <p>浏览器远程控制 Now Playing、Queue、Library、Sources、EQ、Settings、Diagnostics 和 Remix 状态。</p>
+          </article>
+          <article class="card">
+            <h3><a href="remix.html">Remix</a></h3>
+            <p>以内置音效插件提供实时 Radio、Tape、Vinyl 三种声音质感。</p>
+          </article>
+          <article class="card">
             <h3><a href="gui.html">GUI</a></h3>
-            <p>小屏图形界面的菜单、媒体库、搜索、Now Playing、歌词和 EQ。</p>
+            <p>小屏图形界面的菜单、媒体库、搜索、Now Playing、歌词、EQ 和 Remix 快捷键显示。</p>
           </article>
           <article class="card">
             <h3><a href="tui.html">TUI</a></h3>
@@ -83,7 +95,7 @@
         <p>
           LoFiBox Zero 的核心原则是：事实层、runtime 投影层、GUI/TUI/CLI 展示层必须分开。
           播放状态、队列、EQ、远程连接、歌词和媒体库事实属于 runtime 与 core；
-          GUI/TUI/CLI 只读取投影并提交受控命令。
+          WebUI/GUI/TUI/CLI 只读取投影并提交受控命令。
         </p>
 
         <h2>源码仓库</h2>
@@ -104,6 +116,11 @@
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>WebUI</td>
+                <td>浏览器 runtime 投影与远程控制界面</td>
+                <td>手机、平板、桌面浏览器、本地局域网控制</td>
+              </tr>
               <tr>
                 <td>GUI</td>
                 <td>低分辨率图形产品界面</td>

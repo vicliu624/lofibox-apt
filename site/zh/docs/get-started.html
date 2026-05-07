@@ -18,6 +18,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html" aria-current="page">开始使用</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -35,6 +37,8 @@
       <aside class="doc-nav" aria-label="文档导航">
         <a href="index.html">文档总览</a>
         <a href="get-started.html" aria-current="page">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -98,6 +102,11 @@ lofibox doctor --json</code></pre>
                 <td>在 Linux 桌面或设备显示环境中启动图形界面。</td>
               </tr>
               <tr>
+                <td>WebUI</td>
+                <td><code>lofibox --webui --webui-bind 127.0.0.1</code></td>
+                <td>启动浏览器远程控制，默认端口 <code>8765</code>。</td>
+              </tr>
+              <tr>
                 <td>TUI</td>
                 <td><code>lofibox tui</code> 或 <code>lofibox-tui</code></td>
                 <td>在终端中启动 Dashboard。适合 SSH、服务器和开发者工作流。</td>
@@ -136,6 +145,14 @@ lofibox source add jellyfin \
 lofibox source probe jellyfin-home
 lofibox remote browse jellyfin-home /albums
 lofibox remote search jellyfin-home "radiohead"</code></pre>
+
+        <h2>6. 切换 Remix 音效</h2>
+        <p>
+          Remix 可通过 GUI、TUI、WebUI 和 CLI 使用。它在 OFF、Radio、Tape、Vinyl 之间循环，是运行时音效，
+          不写回文件，也不重启当前曲目。
+        </p>
+        <pre><code>lofibox remix
+lofibox eq show --json</code></pre>
 
         <div class="notice">
           <strong>退出界面不会停止播放。</strong>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remix | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 内置 Remix 音效说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/remix.html">
+    <link rel="alternate" hreflang="zh-Hans" href="remix.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html" aria-current="page">Remix</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/remix.html">EN</a>
+            <a href="remix.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html" aria-current="page">Remix</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Remix</p>
+        <h1>内置实时音效</h1>
+        <p>
+          Remix 是 LoFiBox 0.2.0 中以内置插件形式接入的 DSP 功能。
+          它把创作型声音染色放入实时音频链路，同时所有切换都仍然走 runtime command bus。
+        </p>
+
+        <h2>切换顺序</h2>
+        <p>
+          runtime 会按 <code>OFF -&gt; Radio -&gt; Tape -&gt; Vinyl -&gt; OFF</code> 循环。
+          切换是热更新，不需要重启当前曲目。
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>界面</th><th>控制方式</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>GUI</td><td>按 <code>R</code>。应用内 <code>F1</code> help 也会列出这个快捷键。</td></tr>
+              <tr><td>TUI</td><td>按 <code>R</code>；小写 <code>r</code> 保留给远程连接 reconnect 流程。</td></tr>
+              <tr><td>WebUI</td><td>按 <code>R</code> / <code>r</code>，或在 Settings 中点击 <code>CYCLE</code>。</td></tr>
+              <tr><td>CLI</td><td>对正在运行的 runtime 执行 <code>lofibox remix</code>。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>三种质感</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Radio</h3>
+            <p>
+              窄频 AM 电台感：带宽收窄、立体声向单声道靠拢、中频凸起、
+              接收机噪声、慢速 flutter、随机漂移和饱和的载波质感。
+            </p>
+          </article>
+          <article class="card">
+            <h3>Tape</h3>
+            <p>
+              旧磁带的温暖：低频厚度、高频滚降、wow 与 flutter、
+              磁带底噪和柔和饱和，让声音更旧、更暖。
+            </p>
+          </article>
+          <article class="card">
+            <h3>Vinyl</h3>
+            <p>
+              黑胶唱机纹理：轻微 wow、唱头染色、表面噪声、灰尘 click、
+              偶发 scratch decay 和温和饱和。
+            </p>
+          </article>
+        </div>
+
+        <h2>插件边界</h2>
+        <p>
+          内置插件 id 是 <code>io.github.vicliu624.lofibox.effect.remix</code>。
+          它注册 <code>remix.radio</code>、<code>remix.tape</code>、<code>remix.vinyl</code> 三个 effect descriptor。
+          这个设计为之后继续增加内置或外部音效留出扩展点，而不是把 runtime 写成固定 UI 分支。
+        </p>
+
+        <h2>CLI 示例</h2>
+        <pre><code>lofibox remix
+lofibox remix --json
+lofibox eq show
+lofibox eq show --json</code></pre>
+
+        <div class="notice">
+          <strong>runtime 边界：</strong>
+          Remix 是播放时音效命令，不是 metadata 修改，也不是曲目转码。
+          它只影响当前播放状态，不会写回音乐文件。
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Remix guide.</span>
+        <span><a href="gui.html">下一篇：GUI</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

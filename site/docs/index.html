@@ -20,6 +20,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html">Get Started</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -37,6 +39,8 @@
       <aside class="doc-nav" aria-label="Documentation navigation">
         <a href="index.html" aria-current="page">Documentation Overview</a>
         <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -59,8 +63,16 @@
             <p>Install the preview build, run LoFiBox for the first time, scan a media library, play music, and diagnose the environment.</p>
           </article>
           <article class="card">
+            <h3><a href="webui.html">WebUI</a></h3>
+            <p>Browser-based remote control for Now Playing, Queue, Library, Sources, EQ, Settings, Diagnostics, and Remix state.</p>
+          </article>
+          <article class="card">
+            <h3><a href="remix.html">Remix</a></h3>
+            <p>Realtime Radio, Tape, and Vinyl effects provided by the built-in audio-effect plugin.</p>
+          </article>
+          <article class="card">
             <h3><a href="gui.html">GUI</a></h3>
-            <p>Small-screen graphical menus, library browsing, search, Now Playing, lyrics, and EQ.</p>
+            <p>Small-screen graphical menus, library browsing, search, Now Playing, lyrics, EQ, and Remix shortcut display.</p>
           </article>
           <article class="card">
             <h3><a href="tui.html">TUI</a></h3>
@@ -84,7 +96,7 @@
         <p>
           LoFiBox Zero follows one core rule: the fact layer, runtime projection layer, and GUI/TUI/CLI presentation layers stay separate.
           Playback state, queue, EQ, remote connections, lyrics, and library facts belong to the runtime and core domains;
-          GUI/TUI/CLI read projections and submit controlled commands.
+          WebUI/GUI/TUI/CLI read projections and submit controlled commands.
         </p>
 
         <h2>Source Repository</h2>
@@ -105,6 +117,11 @@
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>WebUI</td>
+                <td>Browser runtime projection and remote-control surface</td>
+                <td>Phones, tablets, desktop browsers, local LAN control</td>
+              </tr>
               <tr>
                 <td>GUI</td>
                 <td>Low-resolution graphical product interface</td>

@@ -35,9 +35,9 @@ jobs:
       matrix:
         include:
           - deb_arch: amd64
-            runs_on: ubuntu-24.04
+            runs_on: ubuntu-22.04
           - deb_arch: arm64
-            runs_on: ubuntu-24.04-arm
+            runs_on: ubuntu-22.04-arm
 
     steps:
       - name: Checkout LoFiBox-Zero
@@ -87,6 +87,7 @@ jobs:
       - name: Build Debian package
         run: |
           chmod +x debian/rules debian/tests/smoke
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
           dpkg-buildpackage -us -uc -b
 
       - name: Locate Debian build metadata
@@ -116,7 +117,7 @@ jobs:
 
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     steps:
@@ -129,6 +130,65 @@ jobs:
       - name: Install Raspberry Pi ARMv6 cross build tools
         run: |
           sudo dpkg --add-architecture armhf
+          runner_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"
+          sudo python3 - <<'PY'
+          from pathlib import Path
+
+          for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
+              text = path.read_text(encoding="utf-8")
+              if "URIs:" not in text or "ubuntu" not in text:
+                  continue
+              stanzas = []
+              for stanza in text.strip().split("\n\n"):
+                  lines = stanza.splitlines()
+                  if any(line.startswith("Architectures:") for line in lines):
+                      stanzas.append(stanza)
+                      continue
+                  out = []
+                  for line in lines:
+                      out.append(line)
+                      if line.startswith("Types:"):
+                          out.append("Architectures: amd64")
+                  stanzas.append("\n".join(out))
+              path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
+
+          legacy_paths = [Path("/etc/apt/sources.list"), *Path("/etc/apt/sources.list.d").glob("*.list")]
+          for path in legacy_paths:
+              if not path.exists():
+                  continue
+              lines = []
+              for line in path.read_text(encoding="utf-8").splitlines():
+                  stripped = line.lstrip()
+                  prefix = line[: len(line) - len(stripped)]
+                  if stripped.startswith(("deb ", "deb-src ")) and "ubuntu" in stripped:
+                      head = stripped.split("]", 1)[0]
+                      if "arch=" not in head:
+                          parts = stripped.split(None, 2)
+                          if len(parts) >= 3 and parts[1].startswith("["):
+                              option_end = stripped.find("]")
+                              stripped = stripped[:option_end] + " arch=amd64" + stripped[option_end:]
+                          elif len(parts) >= 3:
+                              stripped = f"{parts[0]} [arch=amd64] {parts[1]} {parts[2]}"
+                          line = prefix + stripped
+                  lines.append(line)
+              path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+          cat >/tmp/ubuntu-ports-armhf.sources <<EOF
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: ${runner_codename} ${runner_codename}-updates ${runner_codename}-backports
+          Components: main universe
+          Architectures: armhf
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports
+          Suites: ${runner_codename}-security
+          Components: main universe
+          Architectures: armhf
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo mv /tmp/ubuntu-ports-armhf.sources /etc/apt/sources.list.d/ubuntu-ports-armhf.sources
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             apt-utils \
@@ -172,6 +232,7 @@ jobs:
           export DEB_CFLAGS_APPEND="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
           export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
           export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
           dpkg-buildpackage --host-arch=armhf -us -uc -b
 
       - name: Locate Debian build metadata
@@ -209,7 +270,7 @@ jobs:
     needs:
       - build-native-package
       - build-raspi-armhf-package
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     environment:
       name: github-pages

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebUI | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero 浏览器 WebUI 远程控制说明。">
+    <link rel="alternate" hreflang="en" href="../../docs/webui.html">
+    <link rel="alternate" hreflang="zh-Hans" href="webui.html">
+    <link rel="stylesheet" href="../../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">开始使用</a>
+          <a href="webui.html" aria-current="page">WebUI</a>
+          <a href="remix.html">Remix</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">远程库</a>
+          <a href="packaging.html">APT 源</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="../../docs/webui.html">EN</a>
+            <a href="webui.html" lang="zh-CN" aria-current="true">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="文档导航">
+        <a href="index.html">文档总览</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="webui.html" aria-current="page">WebUI</a>
+        <a href="remix.html">Remix</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">远程媒体库</a>
+        <a href="metadata-lyrics.html">元数据与歌词</a>
+        <a href="packaging.html">APT 源与发布</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">WebUI</p>
+        <h1>浏览器远程控制</h1>
+        <p>
+          WebUI 是 GUI、TUI、CLI 共用 runtime 的浏览器投影。
+          它已经内置进 0.2.0 预览包，覆盖 Now Playing、Queue、Library、Sources、EQ、Settings 和 Diagnostics，不需要前端构建步骤。
+        </p>
+
+        <figure class="figure">
+          <img src="../../assets/images/webui/now.png" alt="LoFiBox WebUI Now Playing">
+          <figcaption>Now Playing：播放控制、频谱、进度、来源状态和当前 Remix 音效。</figcaption>
+        </figure>
+
+        <h2>启动 WebUI</h2>
+        <pre><code>lofibox --webui
+lofibox --webui --webui-bind 127.0.0.1 --webui-port 8765
+
+LOFIBOX_WEBUI=1 \
+LOFIBOX_WEBUI_BIND=127.0.0.1 \
+LOFIBOX_WEBUI_PORT=8765 \
+lofibox</code></pre>
+        <p>
+          默认端口是 <code>8765</code>。本机控制建议绑定 <code>127.0.0.1</code>；只在可信局域网里绑定到 LAN 地址。
+          WebUI 只发送受控 runtime command，不暴露明文凭据。
+        </p>
+
+        <h2>Runtime 传输</h2>
+        <p>
+          浏览器从内置静态服务加载单文件应用。
+          实时更新通过 <code>/api/runtime/events</code> WebSocket 下发，并以 <code>/api/runtime/snapshot</code> polling 兜底。
+          修改动作通过 <code>POST /api/runtime/commands</code> 提交，所以播放、队列、EQ、Remix 都仍然走同一条 runtime command bus。
+        </p>
+
+        <h2>页面</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>页面</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Now Playing</td><td>播放状态、进度、频谱、控制按钮、来源标签和 Remix badge。</td></tr>
+              <tr><td>Queue</td><td>查看和控制当前 runtime queue。</td></tr>
+              <tr><td>Library</td><td>浏览媒体库投影，把可播放项目加入队列。</td></tr>
+              <tr><td>Sources</td><td>读取远程源状态和连接信息。</td></tr>
+              <tr><td>EQ</td><td>控制 10 段 EQ 与 preset 状态。</td></tr>
+              <tr><td>Settings</td><td>查看 runtime settings，并切换 Remix 音效。</td></tr>
+              <tr><td>Diagnostics</td><td>查看 runtime 健康状态和传输状态。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>快捷键</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>按键</th><th>动作</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Space</td><td>播放/暂停。</td></tr>
+              <tr><td>ArrowLeft</td><td>上一首。</td></tr>
+              <tr><td>ArrowRight</td><td>下一首。</td></tr>
+              <tr><td>R / r</td><td>切换内置 Remix 音效：OFF、Radio、Tape、Vinyl。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure class="figure">
+          <img src="../../assets/images/webui/album.png" alt="LoFiBox WebUI 媒体库专辑视图">
+          <figcaption>Library：浏览器只做 runtime 投影，不成为第二个媒体库事实所有者。</figcaption>
+        </figure>
+
+        <div class="notice">
+          <strong>打包说明：</strong>
+          apt 发布 workflow 会用 <code>-DLOFIBOX_BUILD_WEBUI=ON</code> 打开 WebUI，所以 0.2.0 预览包包含这个界面。
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox WebUI guide.</span>
+        <span><a href="remix.html">下一篇：Remix</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

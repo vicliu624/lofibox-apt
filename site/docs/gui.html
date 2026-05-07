@@ -18,6 +18,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html">Get Started</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html" aria-current="page">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -35,6 +37,8 @@
       <aside class="doc-nav" aria-label="Documentation navigation">
         <a href="index.html">Documentation Overview</a>
         <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html" aria-current="page">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -101,7 +105,7 @@
         <h2>EQ / DSP</h2>
         <p>
           The EQ page is the graphical projection of the DSP domain. The current implementation supports 10-band graphic EQ,
-          enable/disable, reset, preset switching, and live updates.
+          enable/disable, reset, preset switching, live updates, and the built-in Remix effect state.
         </p>
         <figure class="figure">
           <img src="../assets/images/gui/05-equalizer.png" alt="LoFiBox GUI EQ page">
@@ -132,6 +136,12 @@
             </tbody>
           </table>
         </div>
+
+        <h3>Remix Shortcut</h3>
+        <p>
+          Press <code>R</code> to cycle OFF, Radio, Tape, and Vinyl.
+          The shortcut appears in the in-app <code>F1</code> help, and switching happens through the runtime command bus.
+        </p>
 
         <h2>GUI and Runtime Boundaries</h2>
         <ul>

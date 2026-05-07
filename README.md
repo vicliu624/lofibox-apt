@@ -7,9 +7,11 @@
 
 这两个入口共享同一个 Pages artifact，但语义必须分开：官网是给人读的，APT repo 是给 `apt` 使用的稳定目录结构。
 
+当前 LoFiBox Zero 版本线已经升级到 `0.2.0`。APT 发布链路需要显式构建 0.2.0 的新增能力，尤其是 WebUI 和内置 Remix 音效插件；官网 Pages 也需要同步描述这些新增特性。
+
 ## 用户安装
 
-当前预览源面向 Debian trixie / amd64：
+当前预览源面向 Debian trixie / amd64、arm64、armhf：
 
 ```bash
 sudo install -d -m 0755 /etc/apt/keyrings
@@ -21,7 +23,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64
+Architectures: amd64 arm64 armhf
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF
 
@@ -73,7 +75,7 @@ Start-Process .\site\index.html
 2. `Settings -> Secrets and variables -> Actions` 增加 APT signing secrets。
 3. 确认仓库启用了 Actions。
 
-`.github/workflows/publish.yml` 是唯一正式发布入口。它会在 `main` 推送时自动发布，也可以手动触发指定 LoFiBox-Zero ref。它会：
+`.github/workflows/publish-xbuild.yml` 是当前正式发布入口。它会在 `main` 推送时自动发布，也可以手动触发指定 LoFiBox-Zero ref。它会：
 
 1. checkout `lofibox-apt`；
 2. checkout `vicliu624/LoFiBox-Zero`；
@@ -83,6 +85,15 @@ Start-Process .\site\index.html
 6. 调用 `scripts/build-public-artifact.sh` 生成完整 `public/`；
 7. 校验 `public/index.html`、`public/debian/dists/<suite>/InRelease`、`Packages`、`pool/*.deb`、公开 keyring 等发布边界；
 8. 上传并部署 GitHub Pages。
+
+当前 push 触发的主发布链路是 `.github/workflows/publish-xbuild.yml`。这条链路和 LoFiBox-Zero 源码 CI 是独立的：源码 CI 负责验证应用仓库，APT CI 会重新 checkout 源码、套用预览版本号、构建 Debian 包、跑 lintian/autopkgtest、生成签名 APT repo，并把官网与 `/debian` 合并成 Pages artifact。
+
+0.2.0 相关 CI 约束：
+
+- Debian 包构建显式设置 `LOFIBOX_EXTRA_CMAKE_ARGS=-DLOFIBOX_BUILD_WEBUI=ON`，确保预览包包含 WebUI。
+- Ubuntu 依赖安装只使用 `pkgconf`，不同时安装 `pkgconf` 和 `pkg-config`，避免 jammy 上的包冲突。
+- foreign architecture 的 Ubuntu ports 源跟随 runner 自身 codename，避免 22.04 runner 混入 noble arm64/armhf 包。
+- 发布前要求 amd64、arm64、armhf 三套 `.changes`、`.deb`、`.buildinfo` 产物齐全。
 
 需要的 GitHub Secrets：
 
@@ -126,6 +137,8 @@ APT:  https://vicliu624.github.io/lofibox-apt/debian
 
 - 官网入口：`site/index.html`
 - 用户文档：`site/docs/`
+- WebUI 文档：`site/docs/webui.html`
+- Remix 文档：`site/docs/remix.html`
 - APT key 管理：`docs/key-management.md`
 - 本地发布说明：`docs/local-publish.md`
 - 发布脚本：

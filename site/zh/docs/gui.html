@@ -18,6 +18,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html">开始使用</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html" aria-current="page">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -35,6 +37,8 @@
       <aside class="doc-nav" aria-label="文档导航">
         <a href="index.html">文档总览</a>
         <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html" aria-current="page">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -100,7 +104,7 @@
 
         <h2>EQ / DSP</h2>
         <p>
-          EQ 页面是 DSP domain 的图形投影。当前实现支持 10 段图形 EQ、启用/禁用、reset、preset 切换和实时热更新。
+          EQ 页面是 DSP domain 的图形投影。当前实现支持 10 段图形 EQ、启用/禁用、reset、preset 切换、实时热更新和内置 Remix 音效状态。
         </p>
         <figure class="figure">
           <img src="../../assets/images/gui/05-equalizer.png" alt="LoFiBox GUI EQ 页面">
@@ -131,6 +135,12 @@
             </tbody>
           </table>
         </div>
+
+        <h3>Remix 快捷键</h3>
+        <p>
+          按 <code>R</code> 在 OFF、Radio、Tape、Vinyl 之间循环。
+          这个快捷键会出现在应用内 <code>F1</code> help 中，切换动作走 runtime command bus。
+        </p>
 
         <h2>GUI 与 runtime 的边界</h2>
         <ul>

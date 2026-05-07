@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remix | LoFiBox Zero</title>
+    <meta name="description" content="LoFiBox Zero built-in Remix audio effects guide.">
+    <link rel="alternate" hreflang="en" href="remix.html">
+    <link rel="alternate" hreflang="zh-Hans" href="../zh/docs/remix.html">
+    <link rel="stylesheet" href="../assets/site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark">LF</span>
+          <span>LoFiBox Zero</span>
+        </a>
+        <div class="nav-links">
+          <a href="get-started.html">Get Started</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html" aria-current="page">Remix</a>
+          <a href="gui.html">GUI</a>
+          <a href="tui.html">TUI</a>
+          <a href="cli.html">CLI</a>
+          <a href="remote-sources.html">Remote Sources</a>
+          <a href="packaging.html">APT Repository</a>
+          <span class="language-switch" aria-label="Language">
+            <a href="remix.html" aria-current="true">EN</a>
+            <a href="../zh/docs/remix.html" lang="zh-CN">中文</a>
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap doc-layout">
+      <aside class="doc-nav" aria-label="Documentation navigation">
+        <a href="index.html">Documentation Overview</a>
+        <a href="get-started.html">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html" aria-current="page">Remix</a>
+        <a href="gui.html">GUI</a>
+        <a href="tui.html">TUI</a>
+        <a href="cli.html">CLI</a>
+        <a href="remote-sources.html">Remote Sources</a>
+        <a href="metadata-lyrics.html">Metadata and Lyrics</a>
+        <a href="packaging.html">APT Repository and Publishing</a>
+      </aside>
+
+      <article class="doc-body">
+        <p class="eyebrow">Remix</p>
+        <h1>Built-in Realtime Audio Effects</h1>
+        <p>
+          Remix is a built-in plugin-backed DSP feature in LoFiBox 0.2.0.
+          It adds creative sound-color processing to the realtime audio chain while keeping switching inside the runtime command bus.
+        </p>
+
+        <h2>Cycle Effects</h2>
+        <p>
+          The runtime cycles <code>OFF -&gt; Radio -&gt; Tape -&gt; Vinyl -&gt; OFF</code>.
+          Switching is hot-updated and does not restart the current track.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Surface</th><th>Control</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>GUI</td><td>Press <code>R</code>. The same shortcut is listed from in-app <code>F1</code> help.</td></tr>
+              <tr><td>TUI</td><td>Press <code>R</code>; lowercase <code>r</code> remains reserved for reconnect in remote flows.</td></tr>
+              <tr><td>WebUI</td><td>Press <code>R</code> / <code>r</code>, or use Settings <code>CYCLE</code>.</td></tr>
+              <tr><td>CLI</td><td>Run <code>lofibox remix</code> against the active runtime.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Effect Character</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Radio</h3>
+            <p>
+              Narrow-band AM-style broadcast: reduced bandwidth, mono narrowing, midrange emphasis,
+              receiver noise, slow flutter, random jitter, and saturated carrier color.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Tape</h3>
+            <p>
+              Worn cassette warmth: low-end body, high-frequency roll-off, wow and flutter,
+              tape hiss, and soft saturation that makes playback feel older and warmer.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Vinyl</h3>
+            <p>
+              Turntable texture: subtle wow, cartridge color, surface noise, dust ticks,
+              occasional scratch decay, and gentle saturation.
+            </p>
+          </article>
+        </div>
+
+        <h2>Plugin Boundary</h2>
+        <p>
+          The built-in plugin id is <code>io.github.vicliu624.lofibox.effect.remix</code>.
+          It registers <code>remix.radio</code>, <code>remix.tape</code>, and <code>remix.vinyl</code> as effect descriptors.
+          The design leaves room for future built-in or external effects without turning the runtime into hardcoded UI branches.
+        </p>
+
+        <h2>CLI Examples</h2>
+        <pre><code>lofibox remix
+lofibox remix --json
+lofibox eq show
+lofibox eq show --json</code></pre>
+
+        <div class="notice">
+          <strong>Runtime boundary:</strong>
+          Remix is an audio-effect command, not a metadata mutation and not a track transform.
+          It affects current playback state only; it does not rewrite music files.
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <span>LoFiBox Remix guide.</span>
+        <span><a href="gui.html">Next: GUI</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

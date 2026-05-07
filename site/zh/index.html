@@ -6,7 +6,7 @@
     <title>LoFiBox Zero | Linux-first 音乐播放器</title>
     <meta
       name="description"
-      content="LoFiBox Zero 官方门户。面向 Linux 小屏设备、桌面、终端、远程媒体库和自动化工作流的音乐播放器。"
+      content="LoFiBox Zero 官方门户。面向 WebUI 远程控制、Linux 小屏设备、桌面、终端、远程媒体库、Remix 音效和自动化工作流的音乐播放器。"
     >
     <meta name="repository" content="https://github.com/vicliu624/LoFiBox-Zero">
     <link rel="me" href="https://github.com/vicliu624/LoFiBox-Zero">
@@ -24,6 +24,8 @@
         <div class="nav-links">
           <a href="#install">安装</a>
           <a href="docs/get-started.html">开始使用</a>
+          <a href="docs/webui.html">WebUI</a>
+          <a href="docs/remix.html">Remix</a>
           <a href="docs/gui.html">GUI</a>
           <a href="docs/tui.html">TUI</a>
           <a href="docs/cli.html">CLI</a>
@@ -44,7 +46,7 @@
           <h1>LoFiBox Zero</h1>
           <p class="lead">
             面向 Cardputer Zero、Raspberry Pi、Linux 桌面、SSH 终端和远程媒体库的音乐播放器。
-            它把 GUI、TUI、CLI 和未来 Agent 接口都建立在同一套 runtime 上。
+            它把 WebUI、GUI、TUI、CLI 和未来 Agent 接口都建立在同一套 runtime 上。
           </p>
           <div class="actions">
             <a class="button primary" href="#install">安装预览版</a>
@@ -109,6 +111,48 @@ sudo apt install lofibox</code></pre>
         <div class="wrap">
           <div class="section-head">
             <div>
+              <p class="eyebrow">New in 0.2.0</p>
+              <h2>浏览器控制与内置 Remix 音效</h2>
+            </div>
+            <p>
+              0.2.0 预览包会发布新的 WebUI 界面和内置 Remix 插件。
+              WebUI 是浏览器里的 runtime 投影；Remix 提供实时 Radio、Tape、Vinyl 三种声音质感。
+            </p>
+          </div>
+
+          <div class="grid two">
+            <article class="card">
+              <h3><a href="docs/webui.html">WebUI 远程控制</a></h3>
+              <p>
+                用 <code>--webui</code> 启动后，可以在浏览器里控制 Now Playing、Queue、Library、Sources、EQ、Settings 和 Diagnostics。
+                它使用 HTTP 与 WebSocket 实时更新，并带 polling fallback。
+              </p>
+              <div class="tag-list">
+                <span class="tag">HTTP</span>
+                <span class="tag">WebSocket</span>
+                <span class="tag">手机浏览器</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3><a href="docs/remix.html">Remix 音效</a></h3>
+              <p>
+                不重启播放即可在 OFF、Radio、Tape、Vinyl 之间切换。
+                GUI、TUI、WebUI 使用 <code>R</code>，CLI 可运行 <code>lofibox remix</code>。
+              </p>
+              <div class="tag-list">
+                <span class="tag">Radio</span>
+                <span class="tag">Tape</span>
+                <span class="tag">Vinyl</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
               <p class="eyebrow">Open Source</p>
               <h2>源码仓库与开发入口</h2>
             </div>
@@ -141,15 +185,24 @@ sudo apt install lofibox</code></pre>
           <div class="section-head">
             <div>
               <p class="eyebrow">Interfaces</p>
-              <h2>三种正式入口</h2>
+              <h2>四种正式入口</h2>
             </div>
             <p>
-              GUI 负责小屏和桌面窗口，TUI 负责终端原生控制台，CLI 负责一次性命令、脚本、systemd、测试和 Agent。
-              它们共享runtime。
+              WebUI 负责浏览器和手机远程控制，GUI 负责小屏和桌面窗口，TUI 负责终端原生控制台，
+              CLI 负责一次性命令、脚本、systemd、测试和 Agent。它们共享 runtime。
             </p>
           </div>
 
-          <div class="grid">
+          <div class="grid two">
+            <article class="card">
+              <h3>WebUI</h3>
+              <p>浏览器里的远程控制界面，覆盖播放、队列、媒体库、远程源、EQ、设置、诊断和 Remix 状态。</p>
+              <div class="tag-list">
+                <span class="tag">Browser</span>
+                <span class="tag">WebSocket</span>
+                <span class="tag">Remote control</span>
+              </div>
+            </article>
             <article class="card">
               <h3>GUI</h3>
               <p>适合 320x170 小屏、X11 桌面窗口和设备前面板。覆盖主菜单、媒体库、搜索、Now Playing、歌词和 EQ。</p>
@@ -217,7 +270,8 @@ sudo apt install lofibox</code></pre>
             <article class="card">
               <h3>EQ / DSP</h3>
               <p>
-                支持 10 段图形 EQ、preset、preamp、ReplayGain、loudness、limiter、balance、HPF/LPF 以及设备/内容/source 绑定的产品语义。
+                支持 10 段图形 EQ、preset、preamp、ReplayGain、loudness、limiter、balance、HPF/LPF，
+                以及插件化 Remix 的 Radio、Tape、Vinyl 声音质感。
               </p>
             </article>
           </div>
@@ -235,6 +289,14 @@ sudo apt install lofibox</code></pre>
           </div>
 
           <div class="grid two">
+            <figure class="figure">
+              <img src="../assets/images/webui/now.png" alt="LoFiBox WebUI Now Playing 页面">
+              <figcaption>WebUI Now Playing：浏览器里的播放控制、实时状态和 Remix 状态。</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="../assets/images/webui/album.png" alt="LoFiBox WebUI 专辑和媒体库页面">
+              <figcaption>WebUI Library：浏览专辑、加入队列，并保持同一套 runtime 状态。</figcaption>
+            </figure>
             <figure class="figure">
               <img src="../assets/images/gui/04-search.png" alt="LoFiBox GUI 搜索窗口">
               <figcaption>GUI 搜索：跨本地库和远程源的统一入口。</figcaption>

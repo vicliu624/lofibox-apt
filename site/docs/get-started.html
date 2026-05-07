@@ -18,6 +18,8 @@
         </a>
         <div class="nav-links">
           <a href="get-started.html" aria-current="page">Get Started</a>
+          <a href="webui.html">WebUI</a>
+          <a href="remix.html">Remix</a>
           <a href="gui.html">GUI</a>
           <a href="tui.html">TUI</a>
           <a href="cli.html">CLI</a>
@@ -35,6 +37,8 @@
       <aside class="doc-nav" aria-label="Documentation navigation">
         <a href="index.html">Documentation Overview</a>
         <a href="get-started.html" aria-current="page">Get Started</a>
+        <a href="webui.html">WebUI</a>
+        <a href="remix.html">Remix</a>
         <a href="gui.html">GUI</a>
         <a href="tui.html">TUI</a>
         <a href="cli.html">CLI</a>
@@ -100,6 +104,11 @@ lofibox doctor --json</code></pre>
                 <td>Starts the graphical interface on a Linux desktop or device display.</td>
               </tr>
               <tr>
+                <td>WebUI</td>
+                <td><code>lofibox --webui --webui-bind 127.0.0.1</code></td>
+                <td>Starts browser remote control on port <code>8765</code> by default.</td>
+              </tr>
+              <tr>
                 <td>TUI</td>
                 <td><code>lofibox tui</code> or <code>lofibox-tui</code></td>
                 <td>Starts the terminal Dashboard for SSH, servers, and developer workflows.</td>
@@ -138,6 +147,14 @@ lofibox source add jellyfin \
 lofibox source probe jellyfin-home
 lofibox remote browse jellyfin-home /albums
 lofibox remote search jellyfin-home "radiohead"</code></pre>
+
+        <h2>6. Cycle Remix Effects</h2>
+        <p>
+          Remix is available through GUI, TUI, WebUI, and CLI. It cycles OFF, Radio, Tape, and Vinyl as a runtime effect,
+          without rewriting files or restarting the track.
+        </p>
+        <pre><code>lofibox remix
+lofibox eq show --json</code></pre>
 
         <div class="notice">
           <strong>Closing an interface does not stop playback.</strong>

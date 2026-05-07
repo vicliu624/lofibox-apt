@@ -31,7 +31,7 @@ concurrency:
 jobs:
   build-native-package:
     name: Build Debian package (${{ matrix.deb_arch }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -87,6 +87,7 @@ jobs:
       - name: Build Debian package
         run: |
           chmod +x debian/rules debian/tests/smoke
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
           dpkg-buildpackage -us -uc -b
 
       - name: Locate Debian build metadata
@@ -120,7 +121,7 @@ jobs:
 
   build-arm64-package:
     name: Build Debian package (arm64)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     steps:
@@ -133,6 +134,7 @@ jobs:
       - name: Install arm64 cross build tools
         run: |
           sudo dpkg --add-architecture arm64
+          runner_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"
           sudo python3 - <<'PY'
           from pathlib import Path
 
@@ -153,18 +155,39 @@ jobs:
                           out.append("Architectures: amd64")
                   stanzas.append("\n".join(out))
               path.write_text("\n\n".join(stanzas) + "\n", encoding="utf-8")
+
+          legacy_paths = [Path("/etc/apt/sources.list"), *Path("/etc/apt/sources.list.d").glob("*.list")]
+          for path in legacy_paths:
+              if not path.exists():
+                  continue
+              lines = []
+              for line in path.read_text(encoding="utf-8").splitlines():
+                  stripped = line.lstrip()
+                  prefix = line[: len(line) - len(stripped)]
+                  if stripped.startswith(("deb ", "deb-src ")) and "ubuntu" in stripped:
+                      head = stripped.split("]", 1)[0]
+                      if "arch=" not in head:
+                          parts = stripped.split(None, 2)
+                          if len(parts) >= 3 and parts[1].startswith("["):
+                              option_end = stripped.find("]")
+                              stripped = stripped[:option_end] + " arch=amd64" + stripped[option_end:]
+                          elif len(parts) >= 3:
+                              stripped = f"{parts[0]} [arch=amd64] {parts[1]} {parts[2]}"
+                          line = prefix + stripped
+                  lines.append(line)
+              path.write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
-          cat >/tmp/ubuntu-ports.sources <<'EOF'
+          cat >/tmp/ubuntu-ports.sources <<EOF
           Types: deb
           URIs: http://ports.ubuntu.com/ubuntu-ports
-          Suites: noble noble-updates noble-backports
+          Suites: ${runner_codename} ${runner_codename}-updates ${runner_codename}-backports
           Components: main universe
           Architectures: arm64
           Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
           Types: deb
           URIs: http://ports.ubuntu.com/ubuntu-ports
-          Suites: noble-security
+          Suites: ${runner_codename}-security
           Components: main universe
           Architectures: arm64
           Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
@@ -215,6 +238,7 @@ jobs:
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
           dpkg-buildpackage --host-arch=arm64 -us -uc -b
 
       - name: Locate Debian build metadata
@@ -249,7 +273,7 @@ jobs:
 
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
 
     steps:
@@ -353,6 +377,7 @@ jobs:
 
             chmod +x debian/rules debian/tests/smoke
             export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
+            export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
             dpkg-buildpackage -us -uc -b
 
             changes_file="$(find /work -maxdepth 1 -name "lofibox_*_armhf.changes" -print -quit)"
@@ -388,7 +413,7 @@ jobs:
       - build-native-package
       - build-arm64-package
       - build-raspi-armhf-package
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     environment:
       name: github-pages

@@ -34,9 +34,9 @@ jobs:
       matrix:
         include:
           - deb_arch: amd64
-            runs_on: ubuntu-24.04
+            runs_on: ubuntu-22.04
           - deb_arch: arm64
-            runs_on: ubuntu-24.04-arm
+            runs_on: ubuntu-22.04-arm
 
     steps:
       - name: Checkout LoFiBox-Zero
@@ -86,6 +86,7 @@ jobs:
       - name: Build Debian package
         run: |
           chmod +x debian/rules debian/tests/smoke
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
           DEB_BUILD_OPTIONS="noautodbgsym" dpkg-buildpackage -us -uc -b
 
       - name: Locate Debian build metadata
@@ -115,7 +116,7 @@ jobs:
 
   build-raspi-armhf-package:
     name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout LoFiBox-Zero
@@ -173,6 +174,7 @@ jobs:
             dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
 
             chmod +x debian/rules debian/tests/smoke
+            export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
             DEB_BUILD_OPTIONS="noautodbgsym" dpkg-buildpackage -us -uc -b
             lintian --profile debian ../lofibox_*_armhf.changes
             test "$(dpkg-deb -f ../lofibox_*_armhf.deb Architecture)" = "armhf"
@@ -189,7 +191,7 @@ jobs:
     needs:
       - build-native-package
       - build-raspi-armhf-package
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
