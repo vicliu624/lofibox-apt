@@ -85,7 +85,7 @@ jobs:
             libxkbcommon-dev \
             lintian \
             ninja-build \
-            pkgconf \
+            "pkgconf:${runner_arch}" \
             python3
 
       - name: Apply preview version suffix

@@ -210,6 +210,7 @@ jobs:
       - name: Build arm64 package
         run: |
           chmod +x debian/rules debian/tests/smoke
+          sed -i 's/^ pkgconf$/ pkgconf:native/' debian/control
           export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
