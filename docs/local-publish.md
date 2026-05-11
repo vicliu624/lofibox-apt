@@ -1,14 +1,18 @@
-# 本地生成预览 APT 源
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-这个流程用于本机检查，不会上传 GitHub Pages。
+# Local Preview APT Publishing
 
-发布物分成三层：
+This document describes local validation. It does not upload GitHub Pages.
 
-- `site/`：官网源码，提交到 git。
-- `public/`：一次性 Pages artifact，不提交到 git。
-- `public/debian/`：APT 机器接口，不允许混入 HTML。
+The release surfaces are layered:
 
-## 构建 Debian 包
+- `site/`: static website source, committed to git.
+- `public/`: one generated Pages artifact, not committed to git.
+- `public/debian/`: machine-readable APT repository, not a website path.
+
+## Build A Debian Package Locally
+
+For ad-hoc local package construction:
 
 ```sh
 git clone https://github.com/vicliu624/LoFiBox-Zero.git
@@ -17,9 +21,10 @@ chmod +x debian/rules debian/tests/smoke
 dpkg-buildpackage -us -uc -b
 ```
 
-生成的 `.changes` 文件会在 `LoFiBox-Zero` 上级目录。
+Generated `.changes`, `.deb`, and `.buildinfo` files are written next to the
+`LoFiBox-Zero` checkout.
 
-## 生成完整 Pages artifact
+## Build A Complete Pages Artifact
 
 ```sh
 gpg --import /path/to/private.asc
@@ -35,12 +40,15 @@ lofibox-apt/scripts/build-public-artifact.sh \
   --origin LoFiBox \
   --label "LoFiBox Preview" \
   --gpg-key "$LOFIBOX_APT_GPG_KEY_ID" \
-  --changes ./lofibox_0.1.0-1~lofibox1_amd64.changes
+  --changes ./lofibox_<preview-version>_amd64.changes \
+  --changes ./lofibox_<preview-version>_arm64.changes \
+  --changes ./lofibox_<preview-version>_armhf.changes
 ```
 
-这个命令会先调用 LoFiBox-Zero 的 APT repo builder，再复制官网，并校验最终 artifact。
+The command calls the LoFiBox-Zero APT repo builder, stages the website, and
+validates the final artifact.
 
-最终结构应包含：
+Expected shape:
 
 ```text
 public/
@@ -53,9 +61,7 @@ public/
     pool/...
 ```
 
-## 只预览官网
-
-如果只想检查官网，不生成 APT repo：
+## Website-Only Preview
 
 ```sh
 lofibox-apt/scripts/stage-pages-site.sh \
@@ -65,7 +71,7 @@ lofibox-apt/scripts/stage-pages-site.sh \
 python3 -m http.server --directory lofibox-apt/public 8080
 ```
 
-如果已经有 APT repo，并希望强制校验它：
+If an APT repository already exists and should be validated after staging:
 
 ```sh
 lofibox-apt/scripts/stage-pages-site.sh \
@@ -74,59 +80,51 @@ lofibox-apt/scripts/stage-pages-site.sh \
   --require-apt
 ```
 
-## 本地测试
+## GitHub Pages Publishing
 
-```sh
-python3 -m http.server --directory lofibox-apt/public 8080
-```
-
-然后临时把 deb822 source 的 `URIs:` 指向本地服务，例如：
-
-```text
-URIs: http://127.0.0.1:8080/debian
-```
-
-注意：本地 HTTP 测试只用于验证路径和索引，不代表最终 GitHub Pages 部署已经成功。
-
-## GitHub Pages 发布
-
-远端仓库使用：
+Remote repository:
 
 ```text
 git@github.com:vicliu624/lofibox-apt.git
 ```
 
-GitHub 仓库设置中需要：
+Repository settings:
 
-- Pages source 选择 `GitHub Actions`。
-- Actions secrets 增加 `LOFIBOX_APT_GPG_PRIVATE_KEY`。
-- Actions secrets 增加 `LOFIBOX_APT_GPG_KEY_ID`。
+- Pages source: `GitHub Actions`
+- Required secrets: `LOFIBOX_APT_GPG_PRIVATE_KEY`, `LOFIBOX_APT_GPG_KEY_ID`
+- Optional secret: `LOFIBOX_APT_GPG_PASSPHRASE`
 
-推送到 `main` 会自动触发 `Publish LoFiBox APT Repository` workflow，使用：
+Publishing is manual or triggered by the `LoFiBox-Zero` source release
+workflow. It is not triggered by pushing website changes to `main`.
+
+Recommended manual inputs:
 
 ```text
-source_ref: main
+source_ref: v0.2.1
+expected_upstream_version: 0.2.1
 suite: trixie
 preview_suffix: auto
 ```
 
-架构发布约束：预览源必须同时发布 `amd64`、`arm64` 和 `armhf`。`arm64` 面向 CM4/CM5 的 64-bit Raspberry Pi OS/Debian；`armhf` 面向 CM0/ARMv6，发布流水线必须在 Raspberry Pi OS/Raspbian ARMv6 用户态中构建，并用 `readelf` 校验 CPU attribute，不能用普通 ARMv7 baseline 的 armhf 包冒充。
+`preview_suffix: auto` resolves to a suffix such as
+`~lofibox123.1`, producing a preview package version like
+`0.2.1-1~lofibox123.1`. The `~` makes preview packages sort below a future
+official Debian package such as `0.2.1-1`.
 
-预览包版本默认使用 `0.1.0-1~lofiboxN` 这类后缀。`~` 让预览源版本低于未来 Debian 官方源的 `0.1.0-1`，所以 workflow 使用 `dch -b` 明确允许这次有意的预览降版本。注意这里有两层命名：APT 仓库 suite 仍然是 `trixie`，但 Debian 包构建产物 `.changes` 的 changelog distribution 固定为 `unstable`，避免 Lintian 把第三方源 suite 误判成无效上传目标。
+The APT suite remains `trixie`, while the package changelog distribution is
+rewritten to `unstable` before package construction. This avoids lintian
+misclassifying a third-party repository suite as an invalid Debian upload
+target.
 
-Lintian 必须使用 Debian profile：`lintian --profile debian "$LOFIBOX_CHANGES"`。GitHub runner 是 Ubuntu，如果使用默认 profile，它会按 Ubuntu 发行版集合校验 `.changes` 的 Distribution，从而把 Debian 的 `unstable` 判成 `bad-distribution-in-changes-file`。
+Lintian must use the Debian profile:
 
-APT Release signing must run in batch mode in CI. The LoFiBox-Zero repository
-builder passes `aptly publish snapshot -batch=true` so GPG does not require an
-interactive tty during GitHub Actions publishing.
-
-也可以手动触发 workflow，并输入：
-
-```text
-source_ref: main
-suite: trixie
-preview_suffix: auto
+```sh
+lintian --profile debian "$LOFIBOX_CHANGES"
 ```
+
+GitHub runners are Ubuntu hosts; the Debian profile keeps lintian's distribution
+rules aligned with the package being built.
+
 ## Cross-Build Boundary
 
 The GitHub publisher builds three package architectures:
@@ -141,23 +139,18 @@ Cross builds are package-construction jobs, not runtime execution jobs. They use
 to execute target architecture test binaries. Runtime smoke coverage stays on
 the native package job and device validation stays on real hardware.
 
-The arm64 cross-build environment must install both target development
-libraries and target runtime libraries required by `dh_shlibdeps`. In
-particular, the package build needs the target `libstdc++6` package in addition
-to the cross compiler runtime packages, otherwise `dh_shlibdeps` cannot resolve
-C++ binary dependencies from the target ELF files.
+The arm64 cross-build environment must install target development libraries and
+target runtime libraries required by `dh_shlibdeps`, including target
+`libstdc++6`.
 
-The Raspberry Pi CM0 package is built as a Raspberry Pi OS/Raspbian armhf
-package, not as a generic Ubuntu/Debian armhf package. Generic Ubuntu armhf
-start files are ARMv7 and will make the final ELF unsuitable for ARM1176JZF-S
-devices even when LoFiBox object files are compiled with ARMv6 flags. The
-publish workflow therefore creates a Raspbian `bookworm` ARMv6 userspace with
-`debootstrap` and `qemu-arm-static`, instead of mixing Raspbian target packages
-into an Ubuntu host or relying on a full third-party disk image. If this flow is
-changed, validate it locally in the same chroot shape before pushing.
+The Raspberry Pi CM0 package is a Raspberry Pi OS/Raspbian armhf package, not a
+generic Ubuntu/Debian armhf package. Generic Ubuntu armhf start files are ARMv7
+and can make the final ELF unsuitable for ARM1176JZF-S devices. The publish
+workflow therefore creates a Raspbian `bookworm` ARMv6 userspace with
+`debootstrap` and `qemu-arm-static`.
 
 The CM0 build must validate the final installed executable with `readelf -A`.
-The accepted attributes are ARMv6 / ARM1176-class, for example:
+Accepted attributes are ARMv6 / ARM1176-class, for example:
 
 ```text
 Tag_CPU_name: "6"
