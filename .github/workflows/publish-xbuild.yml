@@ -186,15 +186,19 @@ jobs:
             libdistro-info-perl \
             libfreetype-dev:arm64 \
             libstdc++6:arm64 \
-            libwayland-bin:native \
+            libwayland-bin:amd64 \
             libwayland-dev:arm64 \
             libx11-dev:arm64 \
             libxkbcommon-dev:arm64 \
             lintian \
             ninja-build \
-            pkgconf:native \
-            wayland-protocols:native \
+            pkgconf:amd64 \
+            wayland-protocols:amd64 \
             python3
+          dpkg-query -W \
+            libwayland-bin:amd64 \
+            pkgconf:amd64 \
+            wayland-protocols
 
       - name: Apply preview version suffix
         env:
