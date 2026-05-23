@@ -89,10 +89,11 @@ EOF</code></pre>
           本仓库只负责官网门户和 APT 源发布。
         </p>
         <ol>
-          <li>推送到 <code>main</code> 走默认发布流程，也可以手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>
-          <li>选择 <code>source_ref</code>，通常是 LoFiBox-Zero 的 main 或 release tag。</li>
+          <li>先创建 LoFiBox-Zero source release，或手动触发 <code>Publish LoFiBox APT Repository</code> workflow。</li>
+          <li>选择 <code>source_ref</code>，优先使用不可变的 LoFiBox-Zero release tag，例如 <code>v0.2.1</code>。</li>
+          <li>可以填写 <code>expected_upstream_version</code>，让发布器在源码版本不匹配时直接失败。</li>
           <li>选择 suite，当前默认 <code>trixie</code>。</li>
-          <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;</code> 后缀。</li>
+          <li>preview_suffix 使用 <code>auto</code> 时生成 <code>~lofibox&lt;run_number&gt;.&lt;run_attempt&gt;</code> 后缀。</li>
           <li>预览后缀会刻意排在未来 Debian 官方版本之前，所以 workflow 使用 <code>dch -b</code> 应用这个版本。</li>
           <li>APT 仓库 suite 仍然发布为 <code>trixie</code>，但包内 changelog distribution 固定为 <code>unstable</code>，避免 Lintian 把第三方源 suite 误判成无效上传目标。</li>
           <li>Lintian 使用 <code>--profile debian</code>，因为 GitHub runner 是 Ubuntu host，但这里检查的是 Debian packaging。</li>
@@ -100,10 +101,10 @@ EOF</code></pre>
           <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
         </ol>
 
-        <h2>0.2.0 的 APT CI 注意点</h2>
+        <h2>APT CI 注意点</h2>
         <p>
-          push 触发的正式发布路径是 <code>publish-xbuild.yml</code>。它和 LoFiBox-Zero 源码 CI 是两条线：
-          源码 CI 验证应用仓库，apt CI 会重新构建 Debian 包、校验包元数据、签名软件源，并发布合并后的 Pages artifact。
+          正式发布路径是 <code>publish.yml</code>。它和 LoFiBox-Zero source release 是两条线：
+          源仓库声明不可变 source tag，apt CI 重新构建 Debian 包、校验包元数据、签名软件源，并发布合并后的 Pages artifact。
         </p>
         <ul>
           <li>包构建通过 <code>LOFIBOX_EXTRA_CMAKE_ARGS=-DLOFIBOX_BUILD_WEBUI=ON</code> 显式打开 WebUI。</li>
@@ -116,8 +117,7 @@ EOF</code></pre>
         <h2>仓库设置</h2>
         <p>
           在 GitHub 仓库设置中，把 Pages source 设为 <strong>GitHub Actions</strong>，并添加下面的 Actions secrets。
-          推送到 <code>main</code> 会使用 LoFiBox-Zero <code>main</code> 和默认 suite 自动发布。
-          手动运行仍然可以选择指定 LoFiBox-Zero ref。
+          发布由手动触发或 LoFiBox-Zero source release 触发；推送本仓库 <code>main</code> 不会自动生成新的包版本。
         </p>
 
         <h2>Secrets</h2>
@@ -129,6 +129,7 @@ EOF</code></pre>
             <tbody>
               <tr><td><code>LOFIBOX_APT_GPG_PRIVATE_KEY</code></td><td>导入用于 APT repository signing 的私钥，支持 ASCII-armored 或 base64 后的 private key 内容。</td></tr>
               <tr><td><code>LOFIBOX_APT_GPG_KEY_ID</code></td><td>传给 aptly / gpg 选择签名 key，推荐填写完整 fingerprint；如果不匹配，workflow 会退回到导入私钥的 fingerprint。</td></tr>
+              <tr><td><code>LOFIBOX_APT_GPG_PASSPHRASE</code></td><td>受 passphrase 保护的 signing key 可使用这个可选 secret。</td></tr>
             </tbody>
           </table>
         </div>
