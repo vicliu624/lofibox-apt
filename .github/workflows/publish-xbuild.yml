@@ -220,13 +220,11 @@ jobs:
       - name: Build arm64 package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          sed -i -E 's/^ (libwayland-bin|pkgconf|wayland-protocols)(,?)$/ \1:native\2/' debian/control
           export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
           export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
-          dpkg-checkbuilddeps -a arm64
           dpkg-buildpackage --host-arch=arm64 -us -uc -b
 
       - name: Locate Debian build metadata

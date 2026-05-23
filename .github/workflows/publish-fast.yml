@@ -233,7 +233,6 @@ jobs:
       - name: Build Raspberry Pi ARMv6 armhf package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          sed -i -E 's/^ (libwayland-bin|pkgconf|wayland-protocols)(,?)$/ \1:native\2/' debian/control
           export DEB_CFLAGS_APPEND="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
           export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
           export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
