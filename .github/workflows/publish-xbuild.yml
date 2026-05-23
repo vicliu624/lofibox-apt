@@ -60,11 +60,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev \
+            libwayland-bin \
+            libwayland-dev \
             libx11-dev \
             libxkbcommon-dev \
             lintian \
             ninja-build \
             pkgconf \
+            wayland-protocols \
             python3
 
       - name: Apply preview version suffix
@@ -183,11 +186,14 @@ jobs:
             libdistro-info-perl \
             libfreetype-dev:arm64 \
             libstdc++6:arm64 \
+            libwayland-bin \
+            libwayland-dev:arm64 \
             libx11-dev:arm64 \
             libxkbcommon-dev:arm64 \
             lintian \
             ninja-build \
             pkgconf \
+            wayland-protocols \
             python3
 
       - name: Apply preview version suffix
@@ -210,7 +216,7 @@ jobs:
       - name: Build arm64 package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          sed -i 's/^ pkgconf$/ pkgconf:native/' debian/control
+          sed -i -E 's/^ (libwayland-bin|pkgconf|wayland-protocols)(,?)$/ \1:native\2/' debian/control
           export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
@@ -314,11 +320,14 @@ jobs:
               dpkg-dev \
               libdistro-info-perl \
               libfreetype-dev \
+              libwayland-bin \
+              libwayland-dev \
               libx11-dev \
               libxkbcommon-dev \
               lintian \
               ninja-build \
               pkgconf \
+              wayland-protocols \
               python3
           '
 

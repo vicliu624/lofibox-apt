@@ -82,11 +82,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev \
+            libwayland-bin \
+            libwayland-dev \
             libx11-dev \
             libxkbcommon-dev \
             lintian \
             ninja-build \
             "pkgconf:${runner_arch}" \
+            wayland-protocols \
             python3
 
       - name: Apply preview version suffix
@@ -200,11 +203,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev:armhf \
+            libwayland-bin \
+            libwayland-dev:armhf \
             libx11-dev:armhf \
             libxkbcommon-dev:armhf \
             lintian \
             ninja-build \
             pkgconf \
+            wayland-protocols \
             python3
 
       - name: Apply preview version suffix
@@ -227,7 +233,7 @@ jobs:
       - name: Build Raspberry Pi ARMv6 armhf package
         run: |
           chmod +x debian/rules debian/tests/smoke
-          sed -i 's/^ pkgconf$/ pkgconf:native/' debian/control
+          sed -i -E 's/^ (libwayland-bin|pkgconf|wayland-protocols)(,?)$/ \1:native\2/' debian/control
           export DEB_CFLAGS_APPEND="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
           export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
           export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
