@@ -81,11 +81,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev \
+            libwayland-bin \
+            libwayland-dev \
             libx11-dev \
             libxkbcommon-dev \
             lintian \
             ninja-build \
             "pkgconf:${runner_arch}" \
+            wayland-protocols \
             python3
 
       - name: Apply preview version suffix
@@ -174,11 +177,14 @@ jobs:
               dpkg-dev \
               libdistro-info-perl \
               libfreetype-dev \
+              libwayland-bin \
+              libwayland-dev \
               libx11-dev \
               libxkbcommon-dev \
               lintian \
               ninja-build \
               pkgconf \
+              wayland-protocols \
               python3
 
             export DEBEMAIL=maintainers@example.invalid
