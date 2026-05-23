@@ -108,6 +108,11 @@ if [[ -n "$expected_version" ]]; then
   fi
 fi
 
+if ! dpkg-deb -c "$deb_file" | awk '{print $NF}' | grep -Fxq './usr/bin/lofibox-wayland'; then
+  echo "Package is missing the Wayland runtime: ./usr/bin/lofibox-wayland" >&2
+  exit 1
+fi
+
 cp -f "$changes_file" "$deb_file" "$buildinfo_file" "$output_dir/"
 
 copied_changes="$output_dir/$(basename "$changes_file")"

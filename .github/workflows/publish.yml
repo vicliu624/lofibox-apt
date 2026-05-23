@@ -107,11 +107,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev \
+            libwayland-bin \
+            libwayland-dev \
             libx11-dev \
             libxkbcommon-dev \
             lintian \
             ninja-build \
             pkgconf \
+            wayland-protocols \
             python3
 
       - name: Apply Preview Version
@@ -126,7 +129,7 @@ jobs:
         working-directory: LoFiBox-Zero
         run: |
           chmod +x debian/rules debian/tests/smoke
-          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON -DLOFIBOX_BUILD_WAYLAND=ON"
           dpkg-buildpackage -us -uc -b
 
       - name: Collect Package Artifacts
@@ -225,11 +228,14 @@ jobs:
             libdistro-info-perl \
             libfreetype-dev:arm64 \
             libstdc++6:arm64 \
+            libwayland-bin \
+            libwayland-dev:arm64 \
             libx11-dev:arm64 \
             libxkbcommon-dev:arm64 \
             lintian \
             ninja-build \
             pkgconf \
+            wayland-protocols \
             python3
 
       - name: Apply Preview Version
@@ -249,7 +255,7 @@ jobs:
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
-          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
+          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON -DLOFIBOX_BUILD_WAYLAND=ON"
           dpkg-buildpackage --host-arch=arm64 -us -uc -b
 
       - name: Collect Package Artifacts
@@ -347,11 +353,14 @@ jobs:
               dpkg-dev \
               libdistro-info-perl \
               libfreetype-dev \
+              libwayland-bin \
+              libwayland-dev \
               libx11-dev \
               libxkbcommon-dev \
               lintian \
               ninja-build \
               pkgconf \
+              wayland-protocols \
               python3
           '
 
@@ -379,7 +388,7 @@ jobs:
 
           chmod +x debian/rules debian/tests/smoke
           export DEB_BUILD_OPTIONS="\${DEB_BUILD_OPTIONS:+\$DEB_BUILD_OPTIONS }nocheck"
-          export LOFIBOX_EXTRA_CMAKE_ARGS="\${LOFIBOX_EXTRA_CMAKE_ARGS:+\$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
+          export LOFIBOX_EXTRA_CMAKE_ARGS="\${LOFIBOX_EXTRA_CMAKE_ARGS:+\$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON -DLOFIBOX_BUILD_WAYLAND=ON"
           dpkg-buildpackage -us -uc -b
 
           changes_file="\$(find /work -maxdepth 1 -name "lofibox_*_armhf.changes" -print -quit)"
@@ -393,6 +402,7 @@ jobs:
           test "\$(dpkg-deb -f "\$deb_file" Version)" = "$PREVIEW_VERSION"
           tmp_dir="\$(mktemp -d)"
           dpkg-deb -x "\$deb_file" "\$tmp_dir"
+          test -x "\$tmp_dir/usr/bin/lofibox-wayland"
           readelf -A "\$tmp_dir/usr/bin/lofibox" | tee /tmp/lofibox-armhf-attributes.txt
           grep -Eq "Tag_CPU_arch: v6|Tag_CPU_name: \"6\"" /tmp/lofibox-armhf-attributes.txt
           EOF

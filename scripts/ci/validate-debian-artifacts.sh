@@ -97,6 +97,11 @@ for arch in "${arch_list[@]}"; do
     fi
   fi
 
+  if ! dpkg-deb -c "$deb_file" | awk '{print $NF}' | grep -Fxq './usr/bin/lofibox-wayland'; then
+    echo "Package is missing the Wayland runtime: ./usr/bin/lofibox-wayland" >&2
+    exit 1
+  fi
+
   collected_changes+=("$changes_file")
 done
 
