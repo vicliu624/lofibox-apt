@@ -186,14 +186,14 @@ jobs:
             libdistro-info-perl \
             libfreetype-dev:arm64 \
             libstdc++6:arm64 \
-            libwayland-bin \
+            libwayland-bin:native \
             libwayland-dev:arm64 \
             libx11-dev:arm64 \
             libxkbcommon-dev:arm64 \
             lintian \
             ninja-build \
-            pkgconf \
-            wayland-protocols \
+            pkgconf:native \
+            wayland-protocols:native \
             python3
 
       - name: Apply preview version suffix
@@ -222,6 +222,7 @@ jobs:
           export CXX=aarch64-linux-gnu-g++
           export PKG_CONFIG_LIBDIR="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
           export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
+          dpkg-checkbuilddeps -a arm64
           dpkg-buildpackage --host-arch=arm64 -us -uc -b
 
       - name: Locate Debian build metadata

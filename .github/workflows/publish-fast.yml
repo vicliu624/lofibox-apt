@@ -203,14 +203,14 @@ jobs:
             dpkg-dev \
             libdistro-info-perl \
             libfreetype-dev:armhf \
-            libwayland-bin \
+            libwayland-bin:native \
             libwayland-dev:armhf \
             libx11-dev:armhf \
             libxkbcommon-dev:armhf \
             lintian \
             ninja-build \
-            pkgconf \
-            wayland-protocols \
+            pkgconf:native \
+            wayland-protocols:native \
             python3
 
       - name: Apply preview version suffix
