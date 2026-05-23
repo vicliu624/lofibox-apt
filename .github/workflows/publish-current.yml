@@ -257,7 +257,8 @@ jobs:
           test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
           tmp_dir="$(mktemp -d)"
           dpkg-deb -x "$deb_file" "$tmp_dir"
-          arm-linux-gnueabihf-readelf -A "$tmp_dir/usr/bin/lofibox" | tee "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
+          test -x "$tmp_dir/usr/lib/lofibox/lofibox_zero_device"
+          arm-linux-gnueabihf-readelf -A "$tmp_dir/usr/lib/lofibox/lofibox_zero_device" | tee "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
           grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
 
       - name: Upload Raspberry Pi armhf artifact

@@ -380,7 +380,8 @@ jobs:
             test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
             tmp_dir="$(mktemp -d)"
             dpkg-deb -x "$deb_file" "$tmp_dir"
-            readelf -A "$tmp_dir/usr/bin/lofibox" | tee /tmp/lofibox-armhf-attributes.txt
+            test -x "$tmp_dir/usr/lib/lofibox/lofibox_zero_device"
+            readelf -A "$tmp_dir/usr/lib/lofibox/lofibox_zero_device" | tee /tmp/lofibox-armhf-attributes.txt
             grep -Eq "Tag_CPU_arch: v6|Tag_CPU_name: \"6\"" /tmp/lofibox-armhf-attributes.txt
           '
 
