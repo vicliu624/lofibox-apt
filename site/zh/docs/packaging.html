@@ -76,7 +76,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64 arm64 armhf
+Architectures: amd64 arm64
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF</code></pre>
 
@@ -96,7 +96,7 @@ EOF</code></pre>
           <li>预览后缀会刻意排在未来 Debian 官方版本之前，所以 workflow 使用 <code>dch -b</code> 应用这个版本。</li>
           <li>APT 仓库 suite 仍然发布为 <code>trixie</code>，但包内 changelog distribution 固定为 <code>unstable</code>，避免 Lintian 把第三方源 suite 误判成无效上传目标。</li>
           <li>Lintian 使用 <code>--profile debian</code>，因为 GitHub runner 是 Ubuntu host，但这里检查的是 Debian packaging。</li>
-          <li>仓库会发布 <code>amd64</code>、<code>arm64</code>，以及兼容 Raspberry Pi ARMv6/CM0 的 <code>armhf</code> 包。armhf 构建会强制 ARMv6 hard-float flags，并用 ELF CPU attribute 校验。</li>
+          <li>仓库会发布 <code>amd64</code> 和 <code>arm64</code> 包。</li>
           <li>workflow 构建包、生成 repo、复制官网、校验 <code>public/</code> 并部署 Pages。</li>
         </ol>
 
@@ -110,7 +110,7 @@ EOF</code></pre>
           <li>Ubuntu 依赖安装只使用 <code>pkgconf</code>，不同时安装 <code>pkgconf</code> 和 <code>pkg-config</code>，避免 jammy 冲突。</li>
           <li>foreign architecture 的 apt 源会跟随 runner 自身 Ubuntu codename，因此 22.04 runner 使用 jammy ports，不混入 noble 包。</li>
           <li>手动 arm64 构建使用原生 <code>ubuntu-22.04-arm</code> runner；cross-build 流程在发布前仍会校验产物架构。</li>
-          <li>Pages 发布 job 会要求 amd64、arm64、armhf 三套包产物都存在，之后才签名并发布 <code>/debian</code>。</li>
+          <li>Pages 发布 job 会要求 amd64、arm64 两套包产物都存在，之后才签名并发布 <code>/debian</code>。</li>
         </ul>
 
         <h2>仓库设置</h2>

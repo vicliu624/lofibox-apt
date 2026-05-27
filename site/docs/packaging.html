@@ -78,7 +78,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64 arm64 armhf
+Architectures: amd64 arm64
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF</code></pre>
 
@@ -98,7 +98,7 @@ EOF</code></pre>
           <li>The preview suffix deliberately sorts below the future official Debian version, so the workflow uses <code>dch -b</code> when applying it.</li>
           <li>The APT repository suite remains <code>trixie</code>, while the package changelog distribution is kept at <code>unstable</code> so Lintian sees a valid Debian upload target.</li>
           <li>Lintian runs with <code>--profile debian</code> because GitHub runners are Ubuntu hosts but the package is linted as Debian packaging.</li>
-          <li>The repository publishes <code>amd64</code>, <code>arm64</code>, and Raspberry Pi ARMv6-compatible <code>armhf</code> packages. The armhf build is forced to ARMv6 hard-float flags and validated with ELF CPU attributes.</li>
+          <li>The repository publishes <code>amd64</code> and <code>arm64</code> packages.</li>
           <li>The workflow builds packages, generates the repository, copies the website, validates <code>public/</code>, and deploys Pages.</li>
         </ol>
 
@@ -113,7 +113,7 @@ EOF</code></pre>
           <li>Ubuntu package installation uses <code>pkgconf</code>, not both <code>pkgconf</code> and <code>pkg-config</code>, avoiding the jammy conflict.</li>
           <li>Foreign-architecture package sources are pinned to the runner's own Ubuntu codename, so 22.04 runners use jammy ports instead of mixing noble packages.</li>
           <li>Manual arm64 builds use the native <code>ubuntu-22.04-arm</code> runner label; cross-build flows still validate the produced architecture before publishing.</li>
-          <li>The Pages publish job expects exactly amd64, arm64, and armhf package artifacts before it signs and publishes <code>/debian</code>.</li>
+          <li>The Pages publish job expects exactly amd64 and arm64 package artifacts before it signs and publishes <code>/debian</code>.</li>
         </ul>
 
         <h2>Repository Setup</h2>

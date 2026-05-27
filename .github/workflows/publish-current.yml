@@ -94,8 +94,8 @@ jobs:
 
       - name: Apply preview version suffix
         env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
+          DEBEMAIL: vicliu@outlook.com
+          DEBFULLNAME: Vic Liu
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
           preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
@@ -140,142 +140,10 @@ jobs:
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
 
-  build-raspi-armhf-package:
-    name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout LoFiBox-Zero
-        uses: actions/checkout@v4
-        with:
-          repository: vicliu624/LoFiBox-Zero
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
-
-      - name: Install Raspberry Pi ARMv6 cross build tools
-        run: |
-          sudo dpkg --add-architecture armhf
-          runner_codename="$(. /etc/os-release && printf '%s' "$VERSION_CODENAME")"
-          sudo rm -f /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list
-          sudo truncate -s 0 /etc/apt/sources.list
-          cat >/tmp/ubuntu-amd64.sources <<EOF
-          Types: deb
-          URIs: http://archive.ubuntu.com/ubuntu
-          Suites: ${runner_codename} ${runner_codename}-updates ${runner_codename}-backports
-          Components: main universe
-          Architectures: amd64
-          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-
-          Types: deb
-          URIs: http://security.ubuntu.com/ubuntu
-          Suites: ${runner_codename}-security
-          Components: main universe
-          Architectures: amd64
-          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-          EOF
-          cat >/tmp/ubuntu-ports-armhf.sources <<EOF
-          Types: deb
-          URIs: http://ports.ubuntu.com/ubuntu-ports
-          Suites: ${runner_codename} ${runner_codename}-updates ${runner_codename}-backports
-          Components: main universe
-          Architectures: armhf
-          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-
-          Types: deb
-          URIs: http://ports.ubuntu.com/ubuntu-ports
-          Suites: ${runner_codename}-security
-          Components: main universe
-          Architectures: armhf
-          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-          EOF
-          sudo mv /tmp/ubuntu-amd64.sources /etc/apt/sources.list.d/ubuntu-amd64.sources
-          sudo mv /tmp/ubuntu-ports-armhf.sources /etc/apt/sources.list.d/ubuntu-ports-armhf.sources
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            apt-utils \
-            binutils-arm-linux-gnueabihf \
-            build-essential \
-            cmake \
-            crossbuild-essential-armhf \
-            debhelper-compat \
-            desktop-file-utils \
-            devscripts \
-            dpkg-dev \
-            libdistro-info-perl \
-            libfreetype-dev:armhf \
-            libwayland-bin:amd64 \
-            libwayland-dev:armhf \
-            libx11-dev:armhf \
-            libxkbcommon-dev:armhf \
-            lintian \
-            ninja-build \
-            pkgconf:amd64 \
-            wayland-protocols:amd64 \
-            python3
-
-      - name: Apply preview version suffix
-        env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
-        run: |
-          current_version="$(dpkg-parsechangelog -S Version)"
-          preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-          apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-          package_distribution="unstable"
-          if [ "$preview_suffix" = "auto" ]; then
-            suffix="~lofibox${GITHUB_RUN_NUMBER}"
-          else
-            suffix="$preview_suffix"
-          fi
-          dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
-          dpkg-parsechangelog -S Version
-
-      - name: Build Raspberry Pi ARMv6 armhf package
-        run: |
-          chmod +x debian/rules debian/tests/smoke
-          sed -i -E 's/^ pkgconf,$/ pkgconf:native,/' debian/control
-          export DEB_CFLAGS_APPEND="-march=armv6 -mfpu=vfp -mfloat-abi=hard"
-          export DEB_CXXFLAGS_APPEND="$DEB_CFLAGS_APPEND"
-          export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig"
-          export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
-          dpkg-buildpackage --host-arch=armhf -us -uc -b
-
-      - name: Locate Debian build metadata
-        run: |
-          changes_file="$(find "$GITHUB_WORKSPACE/.." -maxdepth 1 -name 'lofibox_*_armhf.changes' -print -quit)"
-          test -n "$changes_file"
-          test -s "$changes_file"
-          echo "LOFIBOX_CHANGES=$changes_file" >> "$GITHUB_ENV"
-
-      - name: Run Lintian
-        run: lintian --profile debian "$LOFIBOX_CHANGES"
-
-      - name: Validate Raspberry Pi ARMv6 binary tags
-        run: |
-          deb_file="$(find "$GITHUB_WORKSPACE/.." -maxdepth 1 -name 'lofibox_*_armhf.deb' -print -quit)"
-          test -n "$deb_file"
-          test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
-          tmp_dir="$(mktemp -d)"
-          dpkg-deb -x "$deb_file" "$tmp_dir"
-          test -x "$tmp_dir/usr/lib/lofibox/lofibox_zero_device"
-          arm-linux-gnueabihf-readelf -A "$tmp_dir/usr/lib/lofibox/lofibox_zero_device" | tee "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
-          grep -Eq 'Tag_CPU_arch: v6|Tag_CPU_name: "6"' "$RUNNER_TEMP/lofibox-armhf-attributes.txt"
-
-      - name: Upload Raspberry Pi armhf artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-package-armhf
-          if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/../lofibox_*_armhf.changes
-            ${{ github.workspace }}/../lofibox_*_armhf.deb
-            ${{ github.workspace }}/../lofibox_*_armhf.buildinfo
-
   publish-pages:
     name: Publish website and APT repository
     needs:
       - build-native-package
-      - build-raspi-armhf-package
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -377,8 +245,8 @@ jobs:
           signing_key="${LOFIBOX_IMPORTED_GPG_KEY_ID:-$LOFIBOX_APT_GPG_KEY_ID}"
           test -n "$signing_key"
           mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
-          if [ "${#changes_files[@]}" -lt 3 ]; then
-            printf 'Expected amd64, arm64, and armhf changes files, found %s:\n' "${#changes_files[@]}" >&2
+          if [ "${#changes_files[@]}" -lt 2 ]; then
+            printf 'Expected amd64 and arm64 changes files, found %s:\n' "${#changes_files[@]}" >&2
             printf '  %s\n' "${changes_files[@]}" >&2
             exit 1
           fi
@@ -394,7 +262,7 @@ jobs:
             --lofibox-zero LoFiBox-Zero \
             --suite "$suite" \
             --component main \
-            --architectures amd64,arm64,armhf \
+            --architectures amd64,arm64 \
             --output public \
             --repo-name lofibox-preview \
             --origin LoFiBox \

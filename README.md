@@ -11,7 +11,7 @@
 
 ## 用户安装
 
-当前预览源面向 Debian trixie / amd64、arm64、armhf：
+当前预览源面向 Debian trixie / amd64、arm64：
 
 ```bash
 sudo install -d -m 0755 /etc/apt/keyrings
@@ -23,7 +23,7 @@ Types: deb
 URIs: https://vicliu624.github.io/lofibox-apt/debian
 Suites: trixie
 Components: main
-Architectures: amd64 arm64 armhf
+Architectures: amd64 arm64
 Signed-By: /etc/apt/keyrings/lofibox-archive-keyring.pgp
 EOF
 
@@ -92,8 +92,8 @@ Start-Process .\site\index.html
 
 - Debian 包构建显式设置 `LOFIBOX_EXTRA_CMAKE_ARGS=-DLOFIBOX_BUILD_WEBUI=ON`，确保预览包包含 WebUI。
 - Ubuntu 依赖安装只使用 `pkgconf`，不同时安装 `pkgconf` 和 `pkg-config`，避免 jammy 上的包冲突。
-- foreign architecture 的 Ubuntu ports 源跟随 runner 自身 codename，避免 22.04 runner 混入 noble arm64/armhf 包。
-- 发布前要求 amd64、arm64、armhf 三套 `.changes`、`.deb`、`.buildinfo` 产物齐全。
+- foreign architecture 的 Ubuntu ports 源跟随 runner 自身 codename，避免 22.04 runner 混入 noble arm64 包。
+- 发布前要求 amd64、arm64 两套 `.changes`、`.deb`、`.buildinfo` 产物齐全。
 
 需要的 GitHub Secrets：
 

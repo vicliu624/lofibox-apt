@@ -93,8 +93,8 @@ jobs:
 
       - name: Apply preview version suffix
         env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
+          DEBEMAIL: vicliu@outlook.com
+          DEBFULLNAME: Vic Liu
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
           preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
@@ -139,86 +139,10 @@ jobs:
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.deb
             ${{ github.workspace }}/../lofibox_*_${{ matrix.deb_arch }}.buildinfo
 
-  build-raspi-armhf-package:
-    name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout LoFiBox-Zero
-        uses: actions/checkout@v4
-        with:
-          repository: vicliu624/LoFiBox-Zero
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
-
-      - name: Prepare artifact directory
-        run: mkdir -p armhf-artifacts
-
-      - name: Build in Raspberry Pi ARMv6 environment
-        uses: pguyot/arm-runner-action@v2
-        with:
-          base_image: raspios_lite:latest
-          cpu: arm1176
-          cpu_info: cpuinfo/raspberrypi_zero_w
-          image_additional_mb: 4096
-          shell: /bin/bash -eo pipefail
-          copy_artifact_path: "../lofibox_*_armhf.changes;../lofibox_*_armhf.deb;../lofibox_*_armhf.buildinfo"
-          copy_artifact_dest: armhf-artifacts
-          copy_artifacts_on_fail: yes
-          commands: |
-            set -eux
-            apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              apt-utils \
-              build-essential \
-              cmake \
-              debhelper-compat \
-              desktop-file-utils \
-              devscripts \
-              dpkg-dev \
-              libdistro-info-perl \
-              libfreetype-dev \
-              libwayland-bin \
-              libwayland-dev \
-              libx11-dev \
-              libxkbcommon-dev \
-              lintian \
-              ninja-build \
-              pkgconf \
-              wayland-protocols \
-              python3
-
-            export DEBEMAIL=maintainers@example.invalid
-            export DEBFULLNAME="LoFiBox contributors"
-
-            current_version="$(dpkg-parsechangelog -S Version)"
-            preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-            apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-            package_distribution="unstable"
-            if [ "$preview_suffix" = "auto" ]; then
-              suffix="~lofibox${{ github.run_number }}"
-            else
-              suffix="$preview_suffix"
-            fi
-            dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
-
-            chmod +x debian/rules debian/tests/smoke
-            export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
-            DEB_BUILD_OPTIONS="noautodbgsym" dpkg-buildpackage -us -uc -b
-            lintian --profile debian ../lofibox_*_armhf.changes
-            test "$(dpkg-deb -f ../lofibox_*_armhf.deb Architecture)" = "armhf"
-
-      - name: Upload Raspberry Pi armhf artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-package-armhf
-          if-no-files-found: error
-          path: armhf-artifacts/*
-
   publish-pages:
     name: Publish website and APT repository
     needs:
       - build-native-package
-      - build-raspi-armhf-package
     runs-on: ubuntu-24.04
     environment:
       name: github-pages
@@ -319,8 +243,8 @@ jobs:
           signing_key="${LOFIBOX_IMPORTED_GPG_KEY_ID:-$LOFIBOX_APT_GPG_KEY_ID}"
           test -n "$signing_key"
           mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
-          if [ "${#changes_files[@]}" -lt 3 ]; then
-            printf 'Expected amd64, arm64, and armhf changes files, found %s:\n' "${#changes_files[@]}" >&2
+          if [ "${#changes_files[@]}" -lt 2 ]; then
+            printf 'Expected amd64 and arm64 changes files, found %s:\n' "${#changes_files[@]}" >&2
             printf '  %s\n' "${changes_files[@]}" >&2
             exit 1
           fi
@@ -336,7 +260,7 @@ jobs:
             --lofibox-zero LoFiBox-Zero \
             --suite "$suite" \
             --component main \
-            --architectures amd64,arm64,armhf \
+            --architectures amd64,arm64 \
             --output public \
             --repo-name lofibox-preview \
             --origin LoFiBox \

@@ -72,8 +72,8 @@ jobs:
 
       - name: Apply preview version suffix
         env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
+          DEBEMAIL: vicliu@outlook.com
+          DEBFULLNAME: Vic Liu
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
           preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
@@ -202,8 +202,8 @@ jobs:
 
       - name: Apply preview version suffix
         env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
+          DEBEMAIL: vicliu@outlook.com
+          DEBFULLNAME: Vic Liu
         run: |
           current_version="$(dpkg-parsechangelog -S Version)"
           preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
@@ -258,152 +258,11 @@ jobs:
           if-no-files-found: error
           path: package-artifacts/*
 
-  build-raspi-armhf-package:
-    name: Build Debian package (armhf, Raspberry Pi ARMv6)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 120
-
-    steps:
-      - name: Checkout LoFiBox-Zero
-        uses: actions/checkout@v4
-        with:
-          repository: vicliu624/LoFiBox-Zero
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || 'main' }}
-
-      - name: Install Raspberry Pi ARMv6 chroot tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            binfmt-support \
-            ca-certificates \
-            curl \
-            debootstrap \
-            gnupg \
-            qemu-user-static
-
-      - name: Build Raspberry Pi ARMv6 package
-        env:
-          DEBEMAIL: maintainers@example.invalid
-          DEBFULLNAME: LoFiBox contributors
-        run: |
-          set -euxo pipefail
-
-          root="$RUNNER_TEMP/raspbian-armhf-root"
-          sudo rm -rf "$root"
-
-          curl -fsSL http://archive.raspbian.org/raspbian.public.key -o "$RUNNER_TEMP/raspbian.public.key"
-          gpg --dearmor --yes -o "$RUNNER_TEMP/raspbian-archive-keyring.gpg" "$RUNNER_TEMP/raspbian.public.key"
-          sudo debootstrap \
-            --arch=armhf \
-            --foreign \
-            --keyring="$RUNNER_TEMP/raspbian-archive-keyring.gpg" \
-            bookworm \
-            "$root" \
-            http://archive.raspbian.org/raspbian
-          sudo cp /usr/bin/qemu-arm-static "$root/usr/bin/"
-          sudo chroot "$root" /debootstrap/debootstrap --second-stage
-
-          sudo mount -t proc proc "$root/proc"
-          sudo mount --bind /sys "$root/sys"
-          sudo mount --bind /dev "$root/dev"
-          trap 'sudo umount -R "$root/proc" || true; sudo umount -R "$root/sys" || true; sudo umount -R "$root/dev" || true' EXIT
-
-          sudo chroot "$root" /bin/bash -lc '
-            set -euxo pipefail
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get update
-            apt-get install -y --no-install-recommends \
-              apt-utils \
-              binutils \
-              build-essential \
-              ca-certificates \
-              cmake \
-              debhelper-compat \
-              desktop-file-utils \
-              devscripts \
-              dpkg-dev \
-              libdistro-info-perl \
-              libfreetype-dev \
-              libwayland-bin \
-              libwayland-dev \
-              libx11-dev \
-              libxkbcommon-dev \
-              lintian \
-              ninja-build \
-              pkgconf \
-              wayland-protocols \
-              python3
-          '
-
-          sudo mkdir -p "$root/work/LoFiBox-Zero"
-          tar \
-            --exclude=.git \
-            --exclude=.cache \
-            --exclude=.tmp \
-            --exclude=build \
-            --exclude=obj-* \
-            --exclude=out \
-            --exclude=runs \
-            -C "$GITHUB_WORKSPACE" \
-            -cf - . | sudo tar -C "$root/work/LoFiBox-Zero" -xf -
-
-          sudo chroot "$root" /bin/bash -lc '
-            set -euxo pipefail
-            cd /work/LoFiBox-Zero
-            export DEBIAN_FRONTEND=noninteractive
-            export DEBEMAIL=maintainers@example.invalid
-            export DEBFULLNAME="LoFiBox contributors"
-            current_version="$(dpkg-parsechangelog -S Version)"
-            preview_suffix="${{ github.event_name == 'workflow_dispatch' && inputs.preview_suffix || 'auto' }}"
-            apt_suite="${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'trixie' }}"
-            package_distribution="unstable"
-            if [ "$preview_suffix" = "auto" ]; then
-              suffix="~lofibox${{ github.run_number }}"
-            else
-              suffix="$preview_suffix"
-            fi
-            dch -b --newversion "${current_version}${suffix}" --distribution "$package_distribution" "Preview APT repository build for $apt_suite."
-            dpkg-parsechangelog -S Version
-
-            chmod +x debian/rules debian/tests/smoke
-            export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS:+$DEB_BUILD_OPTIONS }nocheck"
-            export LOFIBOX_EXTRA_CMAKE_ARGS="${LOFIBOX_EXTRA_CMAKE_ARGS:+$LOFIBOX_EXTRA_CMAKE_ARGS }-DLOFIBOX_BUILD_WEBUI=ON"
-            dpkg-buildpackage -us -uc -b
-
-            changes_file="$(find /work -maxdepth 1 -name "lofibox_*_armhf.changes" -print -quit)"
-            test -n "$changes_file"
-            test -s "$changes_file"
-            lintian --profile debian "$changes_file"
-
-            deb_file="$(find /work -maxdepth 1 -name "lofibox_*_armhf.deb" -print -quit)"
-            test -n "$deb_file"
-            test "$(dpkg-deb -f "$deb_file" Architecture)" = "armhf"
-            tmp_dir="$(mktemp -d)"
-            dpkg-deb -x "$deb_file" "$tmp_dir"
-            test -x "$tmp_dir/usr/lib/lofibox/lofibox_zero_device"
-            readelf -A "$tmp_dir/usr/lib/lofibox/lofibox_zero_device" | tee /tmp/lofibox-armhf-attributes.txt
-            grep -Eq "Tag_CPU_arch: v6|Tag_CPU_name: \"6\"" /tmp/lofibox-armhf-attributes.txt
-          '
-
-          mkdir -p package-artifacts
-          sudo cp "$root"/work/lofibox_*_armhf.changes package-artifacts/
-          sudo cp "$root"/work/lofibox_*_armhf.deb package-artifacts/
-          sudo cp "$root"/work/lofibox_*_armhf.buildinfo package-artifacts/
-          sudo chown -R "$USER:$USER" package-artifacts
-
-      - name: Upload Raspberry Pi armhf artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-package-armhf
-          if-no-files-found: error
-          path: package-artifacts/*
-
   publish-pages:
     name: Publish website and APT repository
     needs:
       - build-native-package
       - build-arm64-package
-      - build-raspi-armhf-package
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -504,13 +363,13 @@ jobs:
           mapfile -t changes_files < <(find debian-artifacts -name 'lofibox_*_*.changes' -type f | sort)
           printf '%s\n' "${changes_files[@]}" > "$RUNNER_TEMP/lofibox-changes-files.txt"
 
-          if [ "${#changes_files[@]}" -ne 3 ]; then
-            echo "::error::Expected exactly amd64, arm64, and armhf .changes files; found ${#changes_files[@]}."
+          if [ "${#changes_files[@]}" -ne 2 ]; then
+            echo "::error::Expected exactly amd64 and arm64 .changes files; found ${#changes_files[@]}."
             printf '  %s\n' "${changes_files[@]}"
             exit 1
           fi
 
-          for arch in amd64 arm64 armhf; do
+          for arch in amd64 arm64; do
             if ! grep -Eq "_${arch}\.changes$" "$RUNNER_TEMP/lofibox-changes-files.txt"; then
               echo "::error::Missing $arch .changes artifact."
               exit 1
@@ -565,7 +424,7 @@ jobs:
             --lofibox-zero LoFiBox-Zero \
             --suite "$suite" \
             --component main \
-            --architectures amd64,arm64,armhf \
+            --architectures amd64,arm64 \
             --output public \
             --repo-name lofibox-preview \
             --origin LoFiBox \
@@ -582,7 +441,7 @@ jobs:
           test -s public/lofibox-archive-keyring.pgp
           test -f "public/debian/dists/$suite/InRelease"
           test -f "public/debian/dists/$suite/Release"
-          for arch in amd64 arm64 armhf; do
+          for arch in amd64 arm64; do
             test -s "public/debian/dists/$suite/main/binary-$arch/Packages"
           done
 
